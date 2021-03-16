@@ -18,6 +18,16 @@ function timesetter(time){
 	else{return	Math.floor(time/(60*60*24))+"d "+Math.floor(time/(60*60)-(Math.floor(time/(60*60*24))*24))+"h "+Math.floor(time/60-(Math.floor(time/(60*60))*60))+"m"}
 }
 
+function removeVersion(message){
+	let splitmessage = message.split("-")
+	r=""
+	for(let i=0;i<splitmessage.length-2;i++){
+		r+=splitmessage[i]+"-"
+	}
+	r+=splitmessage[splitmessage.length-2]
+	return r
+}
+
 /*Generate the fields of each server with the player online
 	@param embedMessage String, buffer containing the result of the query to the different ip:port
 	@param nbServ Int, set as the value of the number of server that the query performed
@@ -35,7 +45,7 @@ function createFields(embedMessage){
 				j++
 			}
 			field.push({
-			name:splitmessage[i*4]+" - "+splitmessage[i*4+1],
+			name:splitmessage[i*4]+" - "+removeVersion(splitmessage[i*4+1]),
 			value:"```ini\n\n"+buffer+"```"})
 		}
 	}
@@ -47,10 +57,10 @@ function createFields(embedMessage){
 	@return title String, title which is going to be used in the embed
 */
 function checkGame(embedMessage){
-	title="Player List"
-	splitmessage = embedMessage.split(seperator)
+	let title="Player List"
+	let splitmessage = embedMessage.split(seperator)
 
-	game = []
+	let game = []
 	for(let i=0;i<((splitmessage.length-1)/4);i++){
 		game.push(splitmessage[(i*4)+2])
 	}
