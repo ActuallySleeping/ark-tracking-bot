@@ -157,10 +157,10 @@ client.once('ready' , async () => {
 })
 
 function toString(array){
-	let r=""
-	for(let i=0;i<array.length-1;i++){r+=array[i]+"#"}
-	r+=array[array.length-1]
-	return r
+	let message=""
+	for(let i=0;i<array.length-1;i++){message+=array[i]+"#"}
+	message+=array[array.length-1]
+	return message
 }
 
 client.on('message', message => {
