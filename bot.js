@@ -5,7 +5,7 @@ const sqlite3 = require('sqlite3').verbose()
 const seperator = "@#>£"
 const baselocation = './db/base.db'
 const client = new Discord.Client()
-client.login("ODE1NzIyNTI2NDk0ODE4MzY0.YDwizQ.bkaLkD8EWEDQQ-WxHtcvUuHu1Eo")
+client.login(require(`${__dirname}/token.json`))
 
 /*Change the display of the time 
 	@param time Int, contain the time in seconds, to transform 
@@ -16,6 +16,16 @@ function timesetter(time){
 	if(time<60*60){return Math.floor(time/60)+"m"}
 	if(time<60*60*24){return Math.floor(time/(60*60))+"h "+Math.floor(time/60-(Math.floor(time/(60*60))*60))+"m"}
 	else{return	Math.floor(time/(60*60*24))+"d "+Math.floor(time/(60*60)-(Math.floor(time/(60*60*24))*24))+"h "+Math.floor(time/60-(Math.floor(time/(60*60))*60))+"m"}
+}
+
+function removeVersion(message){
+	let splitmessage = message.split("-")
+	r=""
+	for(let i=0;i<splitmessage.length-2;i++){
+		r+=splitmessage[i]+"-"
+	}
+	r+=splitmessage[splitmessage.length-2]
+	return r
 }
 
 /*Generate the fields of each server with the player online
@@ -35,7 +45,7 @@ function createFields(embedMessage){
 				j++
 			}
 			field.push({
-			name:splitmessage[i*4]+" - "+splitmessage[i*4+1],
+			name:splitmessage[i*4]+" - "+removeVersion(splitmessage[i*4+1]),
 			value:"```ini\n\n"+buffer+"```"})
 		}
 	}
@@ -47,10 +57,10 @@ function createFields(embedMessage){
 	@return title String, title which is going to be used in the embed
 */
 function checkGame(embedMessage){
-	title="Player List"
-	splitmessage = embedMessage.split(seperator)
+	let title="Player List"
+	let splitmessage = embedMessage.split(seperator)
 
-	game = []
+	let game = []
 	for(let i=0;i<((splitmessage.length-1)/4);i++){
 		game.push(splitmessage[(i*4)+2])
 	}
@@ -157,10 +167,10 @@ client.once('ready' , async () => {
 })
 
 function toString(array){
-	let r=""
-	for(let i=0;i<array.length-1;i++){r+=array[i]+"#"}
-	r+=array[array.length-1]
-	return r
+	let message=""
+	for(let i=0;i<array.length-1;i++){message+=array[i]+"#"}
+	message+=array[array.length-1]
+	return message
 }
 
 client.on('message', message => {
