@@ -5,7 +5,7 @@ const sqlite3 = require('sqlite3').verbose()
 const seperator = "@#>£"
 const baselocation = './db/base.db'
 const client = new Discord.Client()
-client.login("ODE1NzIyNTI2NDk0ODE4MzY0.YDwizQ.bkaLkD8EWEDQQ-WxHtcvUuHu1Eo")
+client.login(require(`${__dirname}/token.json`))
 
 /*Change the display of the time 
 	@param time Int, contain the time in seconds, to transform 
