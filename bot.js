@@ -90,10 +90,10 @@ async function createQuery(msg,ips,ports){
 			if(info.map==null && info.game==null){
 				db.all(`SELECT * FROM InformationServer WHERE ip=? AND port=?`,[ips[i],ports[i]], (err,rows)=>{
 					if(rows.length>0){
-						embedMessage += rows[0].map + seperator + rows[0].name        + seperator + rows[0].game + seperator
+						embedMessage += "Not Responding - "+rows[0].map + seperator + rows[0].name        + seperator + rows[0].game + seperator
 					}
 					else{
-						embedMessage += "No maps"   + seperator + ips[i]+":"+ports[i] + seperator + "No games"   + seperator
+						embedMessage += "Not Responding - Map unknow"   + seperator + ips[i]+":"+ports[i] + seperator + "No games"   + seperator
 					}
 				})	
 			}
