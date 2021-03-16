@@ -35,10 +35,9 @@ function removeVersion(message){
 */
 function createFields(embedMessage){
 	let splitmessage = embedMessage.split(seperator)
-	console.log(embedMessage)
 	let field = []
-	for(let i=0;i<(splitmessage.length-1)/4;i++){
-		let  j=0, supersplitmessage = splitmessage[i*4+3].split("\n")
+	for(let i=0;i<(splitmessage.length-1)/5;i++){
+		let  j=0, supersplitmessage = splitmessage[i*5+4].split("\n")
 		while(j<supersplitmessage.length-1){
 			let buffer=""
 			while(buffer.length < 800 && !(j==supersplitmessage.length)){
@@ -46,7 +45,7 @@ function createFields(embedMessage){
 				j++
 			}
 			field.push({
-			name:splitmessage[i*4]+" - "+removeVersion(splitmessage[i*4+1]),
+			name:splitmessage[i*5]+" - "+removeVersion(splitmessage[i*5+1])+splitmessage[i*5+2],
 			value:"```ini\n\n"+buffer+"```"})
 		}
 	}
@@ -62,14 +61,14 @@ function checkGame(embedMessage){
 	let splitmessage = embedMessage.split(seperator)
 
 	let game = []
-	for(let i=0;i<((splitmessage.length-1)/4);i++){
-		game.push(splitmessage[(i*4)+2])
+	for(let i=0;i<((splitmessage.length-1)/5);i++){
+		game.push(splitmessage[(i*5)+3])
 	}
 	let j=0
-	for(let i=0;i<((splitmessage.length-1)/4)-1;i++){
+	for(let i=0;i<((splitmessage.length-1)/5)-1;i++){
 		if(game[i]===game[i+1]){j++}
 	}
-	if(j==((splitmessage.length-1)/4)-1){title=game[0]+" - Player List"}
+	if(j==((splitmessage.length-1)/5)-1){title=game[0]+" - Player List"}
 	
 	return title
 }
@@ -90,16 +89,16 @@ async function createQuery(msg,ips,ports){
 			if(info.map==null && info.game==null){
 				db.all(`SELECT * FROM InformationServer WHERE ip=? AND port=?`,[ips[i],ports[i]], (err,rows)=>{
 					if(rows.length>0){
-						embedMessage += "Not Responding - "+rows[0].map + seperator + rows[0].name        + seperator + rows[0].game + seperator
+						embedMessage += rows[0].map + seperator + rows[0].name       + seperator +" - Not Responding" + seperator + rows[0].game + seperator
 					}
 					else{
-						embedMessage += "Not Responding - Map unknow"   + seperator + ips[i]+":"+ports[i] + seperator + "No games"   + seperator
+						embedMessage += "Map unknow"+ seperator + ips[i]+":"+ports[i]+ seperator +" - Not Responding" + seperator + "No games"   + seperator
 					}
 				})	
 			}
 			else{
-				db.run(`UPDATE InformationServer SET name=?,map=?,game=? WHERE ip=? AND port=?`,[info.name,info.map,info.game,ips[i],ports[i]])
-				embedMessage += info.map + seperator + info.name + seperator + info.game + seperator
+				db.run(`REPLACE INTO InformationServer (ip,port,name,map,game) VALUES (?,?,?,?,?)`,[ips[i],ports[i],info.name,info.map,info.game])
+				embedMessage += info.map + seperator + info.name + seperator+ "" + seperator + info.game + seperator
 			}
 			db.close()
 		}).catch(console.log)
@@ -119,6 +118,7 @@ async function createQuery(msg,ips,ports){
 		}).catch(console.log)
 
 	}
+	console.log(embedMessage)
 	msg.edit(" ‎",{embed:{
 		color: 15105570,
 		author: {name : client.username,icon_url: client.user.avatarURL},
