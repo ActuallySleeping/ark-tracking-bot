@@ -35,6 +35,7 @@ function removeVersion(message){
 */
 function createFields(embedMessage){
 	let splitmessage = embedMessage.split(seperator)
+	console.log(embedMessage)
 	let field = []
 	for(let i=0;i<(splitmessage.length-1)/4;i++){
 		let  j=0, supersplitmessage = splitmessage[i*4+3].split("\n")
@@ -85,8 +86,22 @@ async function createQuery(msg,ips,ports){
 	for (let i in ports){
 
 		await query.info(ips[i],ports[i],1000).then(info=>{
-			if(info.map==null && info.game==null){embedMessage += "Not Responding"+seperator+ips[i]+":"+ports[i]+seperator+"No Games"+seperator}
-			else{								  embedMessage += info.map +seperator+    info.name   +seperator+ info.game+seperator}
+			let db = new sqlite3.Database(baselocation)
+			if(info.map==null && info.game==null){
+				db.all(`SELECT * FROM InformationServer WHERE ip=? AND port=?`,[ips[i],ports[i]], (err,rows)=>{
+					if(rows.length>0){
+						embedMessage += rows[0].map + seperator + rows[0].name        + seperator + rows[0].game + seperator
+					}
+					else{
+						embedMessage += "No maps"   + seperator + ips[i]+":"+ports[i] + seperator + "No games"   + seperator
+					}
+				})	
+			}
+			else{
+				db.run(`UPDATE InformationServer SET name=?,map=?,game=? WHERE ip=? AND port=?`,[info.name,info.map,info.game,ips[i],ports[i]])
+				embedMessage += info.map + seperator + info.name + seperator + info.game + seperator
+			}
+			db.close()
 		}).catch(console.log)
 
 		await query.players(ips[i],ports[i],5000).then(players=>{
@@ -152,7 +167,7 @@ function generateMessage(msg,channel,messageid,ipSave,portSave){
 client.once('ready' , async () => {
 	console.log("Ready to go!")	
 
-	client.user.setActivity('&help', { type: 'WATCHING' })
+	client.user.setActivity('🔧 maintenance', { type: 'PLAYING' })
 	  .catch(err=>{return});
 
 	let db = new sqlite3.Database(baselocation)
