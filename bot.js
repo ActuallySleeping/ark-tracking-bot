@@ -73,14 +73,7 @@ function checkGame(embedMessage){
 	return title
 }
 
-/*Edit a message with an embed with a list of servers and the players online on those server
-	@param msg Object, message to edit
-	@param ips Array of String, contain the different ips of the servers to request 
-	@param ports Array of Int, contain the different ports of the servers to request
-	@use timesetter function, Change the display of the time 
-	@use createFields function, Generate the fields of each server with the player online
-*/
-async function createQuery(msg,ips,ports){
+const generateEmbed = async (ips,ports) =>{
 	let embedMessage =""
 	for (let i in ports){
 
@@ -118,51 +111,52 @@ async function createQuery(msg,ips,ports){
 		}).catch(console.log)
 
 	}
-	console.log(embedMessage)
-	msg.edit(" ‎",{embed:{
+	return {embed:{
 		color: 15105570,
 		author: {name : client.username,icon_url: client.user.avatarURL},
 		title: checkGame(embedMessage),
 		footer: {text: "Made by Leo#4265 with source-server-query"},
 		timestamp: Date.now(),
 		fields: createFields(embedMessage)
-	}}).catch(err =>{return})
+	}}
 }
 
 /*
 */
-function generateMessage(msg,channel,messageid,ipSave,portSave){
-	channel.messages.fetch(messageid)
-	  .catch(err=>{return})
-	  .then(msg => {
-		if(!(msg==undefined || msg.deleted==true)){
-				let timer = setInterval(function() {
-					if(!(msg==undefined || msg.deleted==true)){
-				    	ips=ipSave
-						ports=portSave
-				    	createQuery(msg,ips,ports)
-					}
-					else{clearInterval(timer);
-						let db = new sqlite3.Database(baselocation)
-						db.all(`SELECT * FROM InformationMessage WHERE messageid=?`,messageid, (err,rows)=>{
-						  	if(rows.length>0 && rows.length!=undefined){generateMessage(msg,channel,messageid,ipSave,portSave)}
-						  })
-						db.close()
-					}
-				}, 2500)
+async function generateMessage(timer,msg,channel,messageid,ipSave,portSave){
+	let db = new sqlite3.Database(baselocation)
+	await db.all(`SELECT * FROM InformationMessage WHERE messageid=?`,messageid, (err,rows)=>{
+		if(rows.length>0 && rows.length!=undefined){
+			channel.messages.fetch(messageid)
+			  .catch(err =>{console.log})
+			  .then(async msg =>{
+				if(!(msg==undefined || msg.deleted==true)){
+			    	let ips=ipSave
+					let ports=portSave
+					msg.edit(" ‎",await generateEmbed(ips,ports))
+			  	}
+			  	else{
+					channel.send("‎The message logged as been deleted, a new one will be generated")
+					  .then(msg => {
+						db.run(`UPDATE InformationMessage SET messageid=? WHERE messageid=?`,[msg.id,messageid])
+						generateMessage(timer,msg,channel,msg.id,ipSave,portSave)
+					})
+				}
+			})
 		}
 		else{
-		channel.send("‎The message logged as been deleted, a new one will be generated")
-		  .then(msg => {
-		  	let db = new 
-		  	sqlite3.Database(baselocation)
-			db.run(`UPDATE InformationMessage SET messageid=? WHERE messageid=?`,[msg.id,messageid])
-			db.close()
-			generateMessage(msg,channel,msg.id,ipSave,portSave)
-		  })
+			channel.messages.fetch(messageid)
+			  .catch(err=>{console.log})
+			  .then(msg =>{
+			  	msg.delete()
+			  })
+			clearInterval(timer);
 		}
 	})
+	db.close()
 }
+
+
 
 client.once('ready' , async () => {
 	console.log("Ready to go!")	
@@ -174,9 +168,10 @@ client.once('ready' , async () => {
 	await db.each(`SELECT * FROM InformationMessage`,[], (err,row) =>{
 		/*const guild = client.guilds.cache.get(row.guildid)*/
 		const channel = client.channels.cache.get(row.channelid)
-		generateMessage(undefined,channel,row.messageid,row.ipSave.split("#"),row.portSave.split("#").map(Number))
-	})
-
+		let timer = setInterval(function() {
+			generateMessage(timer,undefined,channel,row.messageid,row.ipSave.split("#"),row.portSave.split("#").map(Number))
+		}, 2500)
+	})	
 	db.close()
 	console.log("Finised querying")
 })
@@ -231,12 +226,21 @@ client.on('message', message => {
 					ipSave.push(args[i].split(":")[0])
 					portSave.push(parseInt(args[i].split(":")[1]))
 				}
-				message.channel.send("‎ ‎")
+				let ips = ipSave;
+				let ports = portSave;
+				message.channel.send("‎ ‎",generateEmbed(ips,ports))
 				  .then(msg => {
 					let db = new sqlite3.Database(baselocation)
 					db.run(`INSERT INTO InformationMessage (guildid,channelid,messageid,ipsave,portSave) VALUES(?,?,?,?,?)`,[msg.guild.id,msg.channel.id,msg.id,toString(ipSave),toString(portSave)])
 					db.close()
-					generateMessage(msg,message.channel,msg.id,ipSave,portSave)
+
+					let ips = ipSave;
+					let ports = portSave;
+
+					let timer = setInterval(function() {
+						generateMessage(timer,msg,msg.channel,msg.id,ips,ports)
+					}, 2500)
+
 				  })
 				
 			}
@@ -247,24 +251,12 @@ client.on('message', message => {
 		else if(command==="stop"){
 			if(args.length>0){
 				let db = new sqlite3.Database(baselocation)
-				db.all(`SELECT * FROM InformationMessage WHERE messageid=?`,args[0], (err,rows)=>{
-				  	for(let i in rows){
-				  		message.channel.messages.fetch(rows[i].messageid).then(
-				  			msg=>{msg.delete()})
-				  	}
-				  	db.run(`DELETE FROM InformationMessage WHERE channelid=?`,message.channel.id)
-				  })
+				db.run(`DELETE FROM InformationMessage WHERE messageid=?`,args[0])
 				db.close()
 				return
 			}
 			let db = new sqlite3.Database(baselocation)
-			db.all(`SELECT * FROM InformationMessage WHERE channelid=?`,message.channel.id, (err,rows)=>{
-			  	for(let i in rows){
-			  		message.channel.messages.fetch(rows[i].messageid).then(
-			  			msg=>{msg.delete()})
-			  	}
-			  	db.run(`DELETE FROM InformationMessage WHERE channelid=?`,message.channel.id)
-			  })
+			db.run(`DELETE FROM InformationMessage WHERE channelid=?`,message.channel.id)
 			db.close()
 		}
 		else if(command=="help"){
