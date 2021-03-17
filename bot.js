@@ -36,8 +36,8 @@ function removeVersion(message){
 function createFields(embedMessage){
 	let splitmessage = embedMessage.split(seperator)
 	let field = []
-	for(let i=0;i<(splitmessage.length-1)/4;i++){
-		let  j=0, supersplitmessage = splitmessage[i*4+3].split("\n")
+	for(let i=0;i<(splitmessage.length-1)/5;i++){
+		let  j=0, supersplitmessage = splitmessage[i*5+4].split("\n")
 		while(j<supersplitmessage.length-1){
 			let buffer=""
 			while(buffer.length < 800 && !(j==supersplitmessage.length)){
@@ -45,7 +45,7 @@ function createFields(embedMessage){
 				j++
 			}
 			field.push({
-			name:splitmessage[i*4]+" - "+removeVersion(splitmessage[i*4+1]),
+			name:splitmessage[i*5]+" - "+removeVersion(splitmessage[i*5+1])+splitmessage[i*5+2],
 			value:"```ini\n\n"+buffer+"```"})
 		}
 	}
@@ -61,32 +61,39 @@ function checkGame(embedMessage){
 	let splitmessage = embedMessage.split(seperator)
 
 	let game = []
-	for(let i=0;i<((splitmessage.length-1)/4);i++){
-		game.push(splitmessage[(i*4)+2])
+	for(let i=0;i<((splitmessage.length-1)/5);i++){
+		game.push(splitmessage[(i*5)+3])
 	}
 	let j=0
-	for(let i=0;i<((splitmessage.length-1)/4)-1;i++){
+	for(let i=0;i<((splitmessage.length-1)/5)-1;i++){
 		if(game[i]===game[i+1]){j++}
 	}
-	if(j==((splitmessage.length-1)/4)-1){title=game[0]+" - Player List"}
+	if(j==((splitmessage.length-1)/5)-1){title=game[0]+" - Player List"}
 	
 	return title
 }
 
-/*Edit a message with an embed with a list of servers and the players online on those server
-	@param msg Object, message to edit
-	@param ips Array of String, contain the different ips of the servers to request 
-	@param ports Array of Int, contain the different ports of the servers to request
-	@use timesetter function, Change the display of the time 
-	@use createFields function, Generate the fields of each server with the player online
-*/
-async function createQuery(msg,ips,ports){
+const generateEmbed = async (ips,ports) =>{
 	let embedMessage =""
 	for (let i in ports){
 
 		await query.info(ips[i],ports[i],1000).then(info=>{
-			if(info.map==null && info.game==null){embedMessage += "Not Responding"+seperator+ips[i]+":"+ports[i]+seperator+"No Games"+seperator}
-			else{								  embedMessage += info.map +seperator+    info.name   +seperator+ info.game+seperator}
+			let db = new sqlite3.Database(baselocation)
+			if(info.map==null && info.game==null){
+				db.all(`SELECT * FROM InformationServer WHERE ip=? AND port=?`,[ips[i],ports[i]], (err,rows)=>{
+					if(rows.length>0){
+						embedMessage += rows[0].map + seperator + rows[0].name       + seperator +" - Not Responding" + seperator + rows[0].game + seperator
+					}
+					else{
+						embedMessage += "Map unknow"+ seperator + ips[i]+":"+ports[i]+ seperator +" - Not Responding" + seperator + "No games"   + seperator
+					}
+				})	
+			}
+			else{
+				db.run(`REPLACE INTO InformationServer (ip,port,name,map,game) VALUES (?,?,?,?,?)`,[ips[i],ports[i],info.name,info.map,info.game])
+				embedMessage += info.map + seperator + info.name + seperator+ "" + seperator + info.game + seperator
+			}
+			db.close()
 		}).catch(console.log)
 
 		await query.players(ips[i],ports[i],5000).then(players=>{
@@ -104,64 +111,67 @@ async function createQuery(msg,ips,ports){
 		}).catch(console.log)
 
 	}
-	msg.edit(" ‎",{embed:{
+	return {embed:{
 		color: 15105570,
 		author: {name : client.username,icon_url: client.user.avatarURL},
 		title: checkGame(embedMessage),
 		footer: {text: "Made by Leo#4265 with source-server-query"},
 		timestamp: Date.now(),
 		fields: createFields(embedMessage)
-	}}).catch(err =>{return})
+	}}
 }
 
 /*
 */
-function generateMessage(msg,channel,messageid,ipSave,portSave){
-	channel.messages.fetch(messageid)
-	  .catch(err=>{return})
-	  .then(msg => {
-		if(!(msg==undefined || msg.deleted==true)){
-				let timer = setInterval(function() {
-					if(!(msg==undefined || msg.deleted==true)){
-				    	ips=ipSave
-						ports=portSave
-				    	createQuery(msg,ips,ports)
-					}
-					else{clearInterval(timer);
-						let db = new sqlite3.Database(baselocation)
-						db.all(`SELECT * FROM InformationMessage WHERE messageid=?`,messageid, (err,rows)=>{
-						  	if(rows.length>0 && rows.length!=undefined){generateMessage(msg,channel,messageid,ipSave,portSave)}
-						  })
-						db.close()
-					}
-				}, 2500)
+async function generateMessage(timer,msg,channel,messageid,ipSave,portSave){
+	let db = new sqlite3.Database(baselocation)
+	await db.all(`SELECT * FROM InformationMessage WHERE messageid=?`,messageid, (err,rows)=>{
+		if(rows.length>0 && rows.length!=undefined){
+			channel.messages.fetch(messageid)
+			  .catch(err =>{console.log})
+			  .then(async msg =>{
+				if(!(msg==undefined || msg.deleted==true)){
+			    	let ips=ipSave
+					let ports=portSave
+					msg.edit(" ‎",await generateEmbed(ips,ports))
+			  	}
+			  	else{
+					channel.send("‎The message logged as been deleted, a new one will be generated")
+					  .then(msg => {
+						db.run(`UPDATE InformationMessage SET messageid=? WHERE messageid=?`,[msg.id,messageid])
+						generateMessage(timer,msg,channel,msg.id,ipSave,portSave)
+					})
+				}
+			})
 		}
 		else{
-		channel.send("‎The message logged as been deleted, a new one will be generated")
-		  .then(msg => {
-		  	let db = new 
-		  	sqlite3.Database(baselocation)
-			db.run(`UPDATE InformationMessage SET messageid=? WHERE messageid=?`,[msg.id,messageid])
-			db.close()
-			generateMessage(msg,channel,msg.id,ipSave,portSave)
-		  })
+			channel.messages.fetch(messageid)
+			  .catch(err=>{console.log})
+			  .then(msg =>{
+			  	msg.delete()
+			  })
+			clearInterval(timer);
 		}
 	})
+	db.close()
 }
+
+
 
 client.once('ready' , async () => {
 	console.log("Ready to go!")	
 
-	client.user.setActivity('&help', { type: 'WATCHING' })
+	client.user.setActivity('🔧 maintenance', { type: 'PLAYING' })
 	  .catch(err=>{return});
 
 	let db = new sqlite3.Database(baselocation)
 	await db.each(`SELECT * FROM InformationMessage`,[], (err,row) =>{
 		/*const guild = client.guilds.cache.get(row.guildid)*/
 		const channel = client.channels.cache.get(row.channelid)
-		generateMessage(undefined,channel,row.messageid,row.ipSave.split("#"),row.portSave.split("#").map(Number))
-	})
-
+		let timer = setInterval(function() {
+			generateMessage(timer,undefined,channel,row.messageid,row.ipSave.split("#"),row.portSave.split("#").map(Number))
+		}, 2500)
+	})	
 	db.close()
 	console.log("Finised querying")
 })
@@ -216,12 +226,21 @@ client.on('message', message => {
 					ipSave.push(args[i].split(":")[0])
 					portSave.push(parseInt(args[i].split(":")[1]))
 				}
-				message.channel.send("‎ ‎")
+				let ips = ipSave;
+				let ports = portSave;
+				message.channel.send("‎ ‎",generateEmbed(ips,ports))
 				  .then(msg => {
 					let db = new sqlite3.Database(baselocation)
 					db.run(`INSERT INTO InformationMessage (guildid,channelid,messageid,ipsave,portSave) VALUES(?,?,?,?,?)`,[msg.guild.id,msg.channel.id,msg.id,toString(ipSave),toString(portSave)])
 					db.close()
-					generateMessage(msg,message.channel,msg.id,ipSave,portSave)
+
+					let ips = ipSave;
+					let ports = portSave;
+
+					let timer = setInterval(function() {
+						generateMessage(timer,msg,msg.channel,msg.id,ips,ports)
+					}, 2500)
+
 				  })
 				
 			}
@@ -232,24 +251,12 @@ client.on('message', message => {
 		else if(command==="stop"){
 			if(args.length>0){
 				let db = new sqlite3.Database(baselocation)
-				db.all(`SELECT * FROM InformationMessage WHERE messageid=?`,args[0], (err,rows)=>{
-				  	for(let i in rows){
-				  		message.channel.messages.fetch(rows[i].messageid).then(
-				  			msg=>{msg.delete()})
-				  	}
-				  	db.run(`DELETE FROM InformationMessage WHERE channelid=?`,message.channel.id)
-				  })
+				db.run(`DELETE FROM InformationMessage WHERE messageid=?`,args[0])
 				db.close()
 				return
 			}
 			let db = new sqlite3.Database(baselocation)
-			db.all(`SELECT * FROM InformationMessage WHERE channelid=?`,message.channel.id, (err,rows)=>{
-			  	for(let i in rows){
-			  		message.channel.messages.fetch(rows[i].messageid).then(
-			  			msg=>{msg.delete()})
-			  	}
-			  	db.run(`DELETE FROM InformationMessage WHERE channelid=?`,message.channel.id)
-			  })
+			db.run(`DELETE FROM InformationMessage WHERE channelid=?`,message.channel.id)
 			db.close()
 		}
 		else if(command=="help"){
