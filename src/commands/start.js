@@ -1,3 +1,13 @@
+const tools = require(`${__dirname}/../tools/embedGenerator.js`)
+const sqlite3 = require('sqlite3').verbose();
+
+function toString(array){
+	let message=""
+	for(let i=0;i<array.length-1;i++){message+=array[i]+"#"}
+	message+=array[array.length-1]
+	return message
+}
+
 module.exports = {
 	name: 'start',
 	args: true,
@@ -26,17 +36,17 @@ module.exports = {
 		}
 		let ips = ipSave;
 		let ports = portSave;
-		message.channel.send("‎ ‎",await generateEmbed(ips,ports))
+		message.channel.send("‎ ‎",await tools.generateEmbed(client,ips,ports))
 		  .then(msg => {
 			let db = new sqlite3.Database(baselocation)
-			db.run(`INSERT INTO InformationMessage (channelid,messageid,ipsave,portSave) VALUES(?,?,?,?)`,[msg.channel.id,msg.id,toString(ipSave),toString(portSave)])
+			db.run(`INSERT INTO InformationMessage (guildid,channelid,messageid,ipsave,portSave) VALUES(?,?,?,?,?)`,[msg.guild.id,msg.channel.id,msg.id,toString(ipSave),toString(portSave)])
 			db.close()
 
 			let ips = ipSave;
 			let ports = portSave;
 
 			let timer = setInterval(function() {
-				generateMessage(timer,msg,msg.channel,msg.id,ips,ports)
+				tools.generateMessage(timer,client,msg,msg.channel,msg.id,ips,ports)
 			}, 30000)
 
 		  })
