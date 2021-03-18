@@ -1,11 +1,13 @@
 const Discord = require('discord.js')
 const query = require("source-server-query");
 const sqlite3 = require('sqlite3').verbose()
+const { DiscordSnowflake } = require('@sapphire/snowflake');
 
 const seperator = "@#>£"
 const baselocation = './db/base.db'
 const client = new Discord.Client()
 client.login(require(`${__dirname}/token.json`))
+const discordSnowflake = new DiscordSnowflake();
 
 /*Change the display of the time 
 	@param time Int, contain the time in seconds, to transform 
@@ -170,7 +172,7 @@ client.once('ready' , async () => {
 		const channel = client.channels.cache.get(row.channelid)
 		let timer = setInterval(function() {
 			generateMessage(timer,undefined,channel,row.messageid,row.ipSave.split("#"),row.portSave.split("#").map(Number))
-		}, 2500)
+		}, 30000)
 	})	
 	db.close()
 	console.log("Finised querying")
@@ -183,109 +185,121 @@ function toString(array){
 	return message
 }
 
-client.on('message', message => {
+client.on('message', async (message) => {
 	if(message.content.startsWith("&")){
-		let command = message.content.substr(1).split(" ")[0].toLowerCase()
-		let args = message.content.split(" ").slice(1)
-		message.delete({timeout:10}).catch(console.log)
-	
-		if(command==="clear" || command==="c"){
-			if(!message.channel.permissionsFor(message.member).has("MANAGE_MESSAGES")){
-				message.channel.send("You must have the Manage Messages permission")
-				  .then(msg => {msg.delete({timeout:2500})})
-				return
+		let db = new sqlite3.Database(baselocation)
+		db.all(`SELECT * FROM MessageLogs WHERE author=? AND authorid=?`,[message.author,message.author.id],(err,rows)=>{
+			if(rows.length>0 && rows!=undefined){
+				if(discordSnowflake.deconstruct(message.id).timestamp-discordSnowflake.deconstruct(rows[0].messageid).timestamp<7000){
+					return
+				}
 			}
-			let j=0,amountleft=args[0]
-			if(args[0]==0 || args[0]==undefined){amountleft=100}
-			if(args[0]>100){
-				for(let i=0;i<Math.floor(args[0]/100);i++){message.channel.bulkDelete(100)}
-				amountleft=args[0]-(Math.floor(args[0]/100)*100)
-			}
+			let command = message.content.substr(1).split(" ")[0].toLowerCase()
+			let args = message.content.split(" ").slice(1)
 			
-			message.channel.bulkDelete(amountleft)
-			message.channel.send("Clear Request Performed")
-			  .then(msg => {msg.delete({timeout:2500})})
-		}
-
-		else if(command==="start" || command==="s"){
-			if(!(message.channel.permissionsFor(message.member).has("MANAGE_GUILD") || message.author.id=="224142905537855489")){
-				message.channel.send("You must have the Manage Server permission")
+			if(command==="clear" || command==="c"){
+				message.delete({timeout:10}).catch(err=>{return})
+				if(!message.channel.permissionsFor(message.member).has("MANAGE_MESSAGES")){
+					message.channel.send("You must have the Manage Messages permission")
+					  .then(msg => {msg.delete({timeout:2500})})
+					return
+				}
+				let j=0,amountleft=args[0]
+				if(args[0]==0 || args[0]==undefined){amountleft=100}
+				if(args[0]>100){
+					for(let i=0;i<Math.floor(args[0]/100);i++){message.channel.bulkDelete(100)}
+					amountleft=args[0]-(Math.floor(args[0]/100)*100)
+				}
+				
+				message.channel.bulkDelete(amountleft)
+				message.channel.send("Clear Request Performed")
 				  .then(msg => {msg.delete({timeout:2500})})
-				return
 			}
-
-			let ipSave=[]
-			let portSave=[]
-
-			if(args.length>0){
-				if(args.length>20){
-					message.channel.send("Too many arguments").then(msg=>{msg.delete({timeout:2500})})
-					return 
+			else if(command==="start" || command==="s"){
+				message.delete({timeout:10}).catch(err=>{return})
+				if(!(message.channel.permissionsFor(message.member).has("MANAGE_GUILD") || message.author.id=="224142905537855489")){
+					message.channel.send("You must have the Manage Server permission")
+					  .then(msg => {msg.delete({timeout:2500})})
+					return
 				}
-				for(let i=0;i<args.length;i++){
-					ipSave.push(args[i].split(":")[0])
-					portSave.push(parseInt(args[i].split(":")[1]))
-				}
-				let ips = ipSave;
-				let ports = portSave;
-				message.channel.send("‎ ‎",generateEmbed(ips,ports))
-				  .then(msg => {
-					let db = new sqlite3.Database(baselocation)
-					db.run(`INSERT INTO InformationMessage (guildid,channelid,messageid,ipsave,portSave) VALUES(?,?,?,?,?)`,[msg.guild.id,msg.channel.id,msg.id,toString(ipSave),toString(portSave)])
-					db.close()
 
+				let ipSave=[]
+				let portSave=[]
+
+				if(args.length>0){
+					if(args.length>20){
+						message.channel.send("Too many arguments").then(msg=>{msg.delete({timeout:2500})})
+						return 
+					}
+					for(let i=0;i<args.length;i++){
+						ipSave.push(args[i].split(":")[0])
+						portSave.push(parseInt(args[i].split(":")[1]))
+					}
 					let ips = ipSave;
 					let ports = portSave;
+					message.channel.send("‎ ‎",generateEmbed(ips,ports))
+					  .then(msg => {
+						let db = new sqlite3.Database(baselocation)
+						db.run(`INSERT INTO InformationMessage (guildid,channelid,messageid,ipsave,portSave) VALUES(?,?,?,?,?)`,[msg.guild.id,msg.channel.id,msg.id,toString(ipSave),toString(portSave)])
+						db.close()
 
-					let timer = setInterval(function() {
-						generateMessage(timer,msg,msg.channel,msg.id,ips,ports)
-					}, 2500)
+						let ips = ipSave;
+						let ports = portSave;
 
-				  })
-				
+						let timer = setInterval(function() {
+							generateMessage(timer,msg,msg.channel,msg.id,ips,ports)
+						}, 30000)
+
+					  })
+					
+				}
+				else{
+					message.channel.send("Missing argument or Invalid argument(s)").then(msg=>{msg.delete({timeout:2500})})
+				}
 			}
-			else{
-				message.channel.send("Missing argument or Invalid argument(s)").then(msg=>{msg.delete({timeout:2500})})
-			}
-		}
-		else if(command==="stop"){
-			if(args.length>0){
+			else if(command==="stop"){
+				message.delete({timeout:10}).catch(err=>{return})
+				if(args.length>0){
+					let db = new sqlite3.Database(baselocation)
+					db.run(`DELETE FROM InformationMessage WHERE messageid=?`,args[0])
+					db.close()
+					return
+				}
 				let db = new sqlite3.Database(baselocation)
-				db.run(`DELETE FROM InformationMessage WHERE messageid=?`,args[0])
+				db.run(`DELETE FROM InformationMessage WHERE channelid=?`,message.channel.id)
 				db.close()
-				return
 			}
-			let db = new sqlite3.Database(baselocation)
-			db.run(`DELETE FROM InformationMessage WHERE channelid=?`,message.channel.id)
-			db.close()
-		}
-		else if(command=="help"){
-			message.channel.send(" ‎",{embed:{
-				color: 15105570,
-				author: {name : client.username,icon_url: client.user.avatarURL},
-				fields:[{
-					name:"List of commands",
-					value:' ‎\n**&start** x.x.x.x:p ... / **&s** x.x.x.x:p ... \n ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎start a new player list of a server, maximum of 20 servers\n\n'
-						+'**&clear** <amount> / **&c** <amount> \n ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎delete message \n\n'
-						+'**&stop** <message id> / **&s** <message id> \n ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎remove all the active list in the channel/with the message id given\n\n'
-						+'**&defaultcluster** / **&dc** \n ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎give you a list of all the ips of different cluster\n\n'
-						+'**Invite the bot** \n ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎Follow the link: https://bit.ly/30LMOoe\n\n'
-				}]
-			}})
-			  .then(msg=>{msg.delete({timeout:20000}).catch(err=>{return})}).catch(err=>{return})
-		}
-		else if(command=="defaultcluster" || command==="dc"){
-			message.channel.send(" ‎",{embed:{
-				color: 15105570,
-				author: {name : client.username,icon_url: client.user.avatarURL},
-				fields:[{
-					name:"List of Servers",
-					value:' ‎\n**ARKLIFE** - PvP\n\`145.239.205.193:27015 145.239.205.193:27025 145.239.205.193:27035 145.239.205.193:27045 145.239.205.193:27055 145.239.205.193:27065 145.239.205.193:27075 145.239.205.193:27095 145.239.205.193:27105\` \n\n'
-					+ '**ARKLIFE** - PvEvP\n\`145.239.205.193:27085 145.239.205.193:27115\` \n\n'
-				}]
-			}})
-			  .then(msg=>{msg.delete({timeout:20000}).catch(err=>{return})}).catch(err=>{return})
-		}
-
+			else if(command=="help"){
+				message.delete({timeout:10}).catch(err=>{return})
+				message.channel.send(" ‎",{embed:{
+					color: 15105570,
+					author: {name : client.username,icon_url: client.user.avatarURL},
+					fields:[{
+						name:"List of commands",
+						value:' ‎\n**&start** x.x.x.x:p ... / **&s** x.x.x.x:p ... \n ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎start a new player list of a server, maximum of 20 servers\n\n'
+							+'**&clear** <amount> / **&c** <amount> \n ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎delete message \n\n'
+							+'**&stop** <message id> / **&s** <message id> \n ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎remove all the active list in the channel/with the message id given\n\n'
+							+'**&defaultcluster** / **&dc** \n ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎give you a list of all the ips of different cluster\n\n'
+							+'**Invite the bot** \n ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎Follow the link: https://bit.ly/30LMOoe\n\n'
+					}]
+				}})
+				  .then(msg=>{msg.delete({timeout:20000}).catch(err=>{return})}).catch(err=>{return})
+			}
+			else if(command=="defaultcluster" || command==="dc"){
+				message.delete({timeout:10}).catch(err=>{return})
+				message.channel.send(" ‎",{embed:{
+					color: 15105570,
+					author: {name : client.username,icon_url: client.user.avatarURL},
+					fields:[{
+						name:"List of Servers",
+						value:' ‎\n**ARKLIFE** - PvP\n\`145.239.205.193:27015 145.239.205.193:27025 145.239.205.193:27035 145.239.205.193:27045 145.239.205.193:27055 145.239.205.193:27065 145.239.205.193:27075 145.239.205.193:27095 145.239.205.193:27105\` \n\n'
+						+ '**ARKLIFE** - PvEvP\n\`145.239.205.193:27085 145.239.205.193:27115\` \n\n'
+					}]
+				}})
+				  .then(msg=>{msg.delete({timeout:20000}).catch(err=>{return})}).catch(err=>{return})
+			}
+			db.run(`REPLACE INTO MessageLogs (author,authorid,messageid) VALUES (?,?,?)`,[message.author,message.author.id,message.id])
+		})
+		db.close()
 	}
 });

@@ -1,5 +1,6 @@
 {
 	"dependencies": {
+		"@sapphire/snowflake": "^1.2.6",
 		"discord.js": "^12.5.1",
 		"source-server-query": "^1.0.1",
 		"sqlite3": "^5.0.2"
