@@ -35,9 +35,9 @@ Clear an amount of message, the default amount is 100
 ### Used Node_modules  
 - discord.js  
 - sqlite3  
-- source-server-query
+- source-server-query  
 
-### What is the working tree looking like
+### What is the working tree looking like  
 .  
 +--node_modules/  
 |   +--...  
