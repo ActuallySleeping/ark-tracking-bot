@@ -1,14 +1,15 @@
 const fs = require('fs');
 const Discord = require('discord.js')
 const sqlite3 = require('sqlite3').verbose();
+
 const tools = require(`${__dirname}/src/tools/embedGenerator.js`)
+const config = require(`${__dirname}/src/config.json`)
+const baselocation = `${__dirname}/src/base.db`
 
 const client = new Discord.Client();
 client.commands = new Discord.Collection();
 client.cooldowns = new Discord.Collection();
 
-const seperator = "@#>£"
-const baselocation = `${__dirname}/src/base.db`
 client.login(require(`${__dirname}/src/token.json`))
 
 const commandFiles = fs.readdirSync(`${__dirname}/src/commands`).filter(file => file.endsWith('.js'));

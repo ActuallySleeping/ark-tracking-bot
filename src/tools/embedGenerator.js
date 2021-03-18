@@ -1,7 +1,9 @@
 const sqlite3 = require('sqlite3').verbose();
 const query = require("source-server-query");
 
-const seperator = "@#>£"
+const config = require(`${__dirname}/../config.json`)
+
+const separator = config.separator
 const baselocation = `${__dirname}/../base.db`
 
 /*Change the display of the time 
@@ -31,7 +33,7 @@ function removeVersion(message){
 	@return field 2DArray, contain a name for the name before a field as well as the value of the field for each server
 */
 function createFields(embedMessage){
-	let splitmessage = embedMessage.split(seperator)
+	let splitmessage = embedMessage.split(separator)
 	let field = []
 	for(let i=0;i<(splitmessage.length-1)/5;i++){
 		let  j=0, supersplitmessage = splitmessage[i*5+4].split("\n")
@@ -55,7 +57,7 @@ function createFields(embedMessage){
 */
 function checkGame(embedMessage){
 	let title="Player List"
-	let splitmessage = embedMessage.split(seperator)
+	let splitmessage = embedMessage.split(separator)
 
 	let game = []
 	for(let i=0;i<((splitmessage.length-1)/5);i++){
@@ -79,16 +81,16 @@ const generateEmbed = async (client,ips,ports) =>{
 			if(info.map==null && info.game==null){
 				db.all(`SELECT * FROM InformationServer WHERE ip=? AND port=?`,[ips[i],ports[i]], (err,rows)=>{
 					if(rows.length>0){
-						embedMessage += rows[0].map + seperator + rows[0].name       + seperator +" - Not Responding" + seperator + rows[0].game + seperator
+						embedMessage += rows[0].map + separator + rows[0].name       + separator +" - Not Responding" + separator + rows[0].game + separator
 					}
 					else{
-						embedMessage += "Map unknow"+ seperator + ips[i]+":"+ports[i]+ seperator +" - Not Responding" + seperator + "No games"   + seperator
+						embedMessage += "Map unknow"+ separator + ips[i]+":"+ports[i]+ separator +" - Not Responding" + separator + "No games"   + separator
 					}
 				})	
 			}
 			else{
 				db.run(`REPLACE INTO InformationServer (ip,port,name,map,game) VALUES (?,?,?,?,?)`,[ips[i],ports[i],info.name,info.map,info.game])
-				embedMessage += info.map + seperator + info.name + seperator+ "" + seperator + info.game + seperator
+				embedMessage += info.map + separator + info.name + separator+ "" + separator + info.game + separator
 			}
 			db.close()
 		}).catch(console.log)
@@ -104,7 +106,7 @@ const generateEmbed = async (client,ips,ports) =>{
 					else{l++}
 				}
 				if(l==j && l!=0){embedMessage += " No Players\n"}
-			}embedMessage+=seperator
+			}embedMessage+=separator
 		}).catch(console.log)
 
 	}
@@ -153,4 +155,4 @@ async function generateMessage(timer,client,msg,channel,messageid,ipSave,portSav
 	db.close()
 }
 
-module.exports = { generateMessage,generateEmbed }
+module.exports = { generateMessage, generateEmbed }

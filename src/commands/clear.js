@@ -1,3 +1,5 @@
+const config = require(`${__dirname}/../config.json`)
+
 module.exports = {
 	name: 'clear',
 	guildOnly: true,

@@ -1,4 +1,7 @@
 const fs = require('fs');
+
+const config = require(`${__dirname}/../config.json`)
+
 module.exports = {
 	name: 'reload',
 	args: true,

@@ -1,6 +1,8 @@
 const tools = require(`${__dirname}/../tools/embedGenerator.js`)
 const sqlite3 = require('sqlite3').verbose();
 
+const config = require(`${__dirname}/../config.json`)
+
 function toString(array){
 	let message=""
 	for(let i=0;i<array.length-1;i++){message+=array[i]+"#"}
