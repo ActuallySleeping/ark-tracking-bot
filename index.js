@@ -1,13 +1,22 @@
+const fs = require('fs');
 const Discord = require('discord.js')
 const query = require("source-server-query");
-const sqlite3 = require('sqlite3').verbose()
+const sqlite3 = require('sqlite3').verbose();
 const { DiscordSnowflake } = require('@sapphire/snowflake');
 
-const seperator = "@#>£"
-const baselocation = './db/base.db'
-const client = new Discord.Client()
-client.login(require(`${__dirname}/token.json`))
 const discordSnowflake = new DiscordSnowflake();
+const client = new Discord.Client();
+client.commands = new Discord.Collection();
+
+const seperator = "@#>£"
+const baselocation = `${__dirname}/src/base.db`
+client.login(require(`${__dirname}/src/token.json`))
+
+const commandFiles = fs.readdirSync(`${__dirname}/src/commands`).filter(file => file.endsWith('.js'));
+for (const file of commandFiles) {
+	const command = require(`${__dirname}/src/commands/${file}`);
+	client.commands.set(command.name, command);
+}
 
 /*Change the display of the time 
 	@param time Int, contain the time in seconds, to transform 
@@ -130,7 +139,7 @@ async function generateMessage(timer,msg,channel,messageid,ipSave,portSave){
 	await db.all(`SELECT * FROM InformationMessage WHERE messageid=?`,messageid, (err,rows)=>{
 		if(rows.length>0 && rows.length!=undefined){
 			channel.messages.fetch(messageid)
-			  .catch(err =>{console.log})
+			  .catch(err =>{return})
 			  .then(async msg =>{
 				if(!(msg==undefined || msg.deleted==true)){
 			    	let ips=ipSave
@@ -148,7 +157,7 @@ async function generateMessage(timer,msg,channel,messageid,ipSave,portSave){
 		}
 		else{
 			channel.messages.fetch(messageid)
-			  .catch(err=>{console.log})
+			  .catch(err=>{return})
 			  .then(msg =>{
 			  	msg.delete()
 			  })
@@ -194,109 +203,20 @@ client.on('message', async (message) => {
 					return
 				}
 			}
-			let command = message.content.substr(1).split(" ")[0].toLowerCase()
+			if(message.guild==undefined){return}
+			let commandName = message.content.substr(1).split(" ")[0].toLowerCase()
 			let args = message.content.split(" ").slice(1)
 			
-			if(command==="clear" || command==="c"){
-				message.delete({timeout:10}).catch(err=>{return})
-				if(!message.channel.permissionsFor(message.member).has("MANAGE_MESSAGES")){
-					message.channel.send("You must have the Manage Messages permission")
-					  .then(msg => {msg.delete({timeout:2500})})
-					return
+			const command = client.commands.get(commandName) || client.commands.find(c => c.aliases && c.aliases.includes(commandName));
+			if (!command) return;
+			try {
+				if(command.args && !args.length){
+					message.channel.send('You need to provide one/or more argument(s)')
+					return 
 				}
-				let j=0,amountleft=args[0]
-				if(args[0]==0 || args[0]==undefined){amountleft=100}
-				if(args[0]>100){
-					for(let i=0;i<Math.floor(args[0]/100);i++){message.channel.bulkDelete(100)}
-					amountleft=args[0]-(Math.floor(args[0]/100)*100)
-				}
-				
-				message.channel.bulkDelete(amountleft)
-				message.channel.send("Clear Request Performed")
-				  .then(msg => {msg.delete({timeout:2500})})
-			}
-			else if(command==="start" || command==="s"){
-				message.delete({timeout:10}).catch(err=>{return})
-				if(!(message.channel.permissionsFor(message.member).has("MANAGE_GUILD") || message.author.id=="224142905537855489")){
-					message.channel.send("You must have the Manage Server permission")
-					  .then(msg => {msg.delete({timeout:2500})})
-					return
-				}
-
-				let ipSave=[]
-				let portSave=[]
-
-				if(args.length>0){
-					if(args.length>20){
-						message.channel.send("Too many arguments").then(msg=>{msg.delete({timeout:2500})})
-						return 
-					}
-					for(let i=0;i<args.length;i++){
-						ipSave.push(args[i].split(":")[0])
-						portSave.push(parseInt(args[i].split(":")[1]))
-					}
-					let ips = ipSave;
-					let ports = portSave;
-					message.channel.send("‎ ‎",generateEmbed(ips,ports))
-					  .then(msg => {
-						let db = new sqlite3.Database(baselocation)
-						db.run(`INSERT INTO InformationMessage (guildid,channelid,messageid,ipsave,portSave) VALUES(?,?,?,?,?)`,[msg.guild.id,msg.channel.id,msg.id,toString(ipSave),toString(portSave)])
-						db.close()
-
-						let ips = ipSave;
-						let ports = portSave;
-
-						let timer = setInterval(function() {
-							generateMessage(timer,msg,msg.channel,msg.id,ips,ports)
-						}, 30000)
-
-					  })
-					
-				}
-				else{
-					message.channel.send("Missing argument or Invalid argument(s)").then(msg=>{msg.delete({timeout:2500})})
-				}
-			}
-			else if(command==="stop"){
-				message.delete({timeout:10}).catch(err=>{return})
-				if(args.length>0){
-					let db = new sqlite3.Database(baselocation)
-					db.run(`DELETE FROM InformationMessage WHERE messageid=?`,args[0])
-					db.close()
-					return
-				}
-				let db = new sqlite3.Database(baselocation)
-				db.run(`DELETE FROM InformationMessage WHERE channelid=?`,message.channel.id)
-				db.close()
-			}
-			else if(command=="help"){
-				message.delete({timeout:10}).catch(err=>{return})
-				message.channel.send(" ‎",{embed:{
-					color: 15105570,
-					author: {name : client.username,icon_url: client.user.avatarURL},
-					fields:[{
-						name:"List of commands",
-						value:' ‎\n**&start** x.x.x.x:p ... / **&s** x.x.x.x:p ... \n ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎start a new player list of a server, maximum of 20 servers\n\n'
-							+'**&clear** <amount> / **&c** <amount> \n ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎delete message \n\n'
-							+'**&stop** <message id> / **&s** <message id> \n ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎remove all the active list in the channel/with the message id given\n\n'
-							+'**&defaultcluster** / **&dc** \n ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎give you a list of all the ips of different cluster\n\n'
-							+'**Invite the bot** \n ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎Follow the link: https://bit.ly/30LMOoe\n\n'
-					}]
-				}})
-				  .then(msg=>{msg.delete({timeout:20000}).catch(err=>{return})}).catch(err=>{return})
-			}
-			else if(command=="defaultcluster" || command==="dc"){
-				message.delete({timeout:10}).catch(err=>{return})
-				message.channel.send(" ‎",{embed:{
-					color: 15105570,
-					author: {name : client.username,icon_url: client.user.avatarURL},
-					fields:[{
-						name:"List of Servers",
-						value:' ‎\n**ARKLIFE** - PvP\n\`145.239.205.193:27015 145.239.205.193:27025 145.239.205.193:27035 145.239.205.193:27045 145.239.205.193:27055 145.239.205.193:27065 145.239.205.193:27075 145.239.205.193:27095 145.239.205.193:27105\` \n\n'
-						+ '**ARKLIFE** - PvEvP\n\`145.239.205.193:27085 145.239.205.193:27115\` \n\n'
-					}]
-				}})
-				  .then(msg=>{msg.delete({timeout:20000}).catch(err=>{return})}).catch(err=>{return})
+				command.execute(client, message, args, baselocation)
+			} catch (err) {
+				return
 			}
 			db.run(`REPLACE INTO MessageLogs (author,authorid,messageid) VALUES (?,?,?)`,[message.author,message.author.id,message.id])
 		})
