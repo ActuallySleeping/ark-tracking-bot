@@ -1,7 +1,8 @@
 module.exports = {
 	name: 'defaultcluster',
+	cooldown: 60,
 	aliases: ['dc'],
-	execute(client, message, args, baselocation) {
+	execute(message, args, client, baselocation, command) {
 		message.delete({timeout:10}).catch(err=>{return})
 		message.channel.send(" ‎",{embed:{
 			color: 15105570,
@@ -12,6 +13,6 @@ module.exports = {
 				+ '**ARKLIFE** - PvEvP\n\`145.239.205.193:27085 145.239.205.193:27115\` \n\n'
 			}]
 		}})
-		  .then(msg=>{msg.delete({timeout:20000}).catch(err=>{return})}).catch(err=>{return})
+		  .then(msg=>{msg.delete({timeout:60000}).catch(err=>{return})}).catch(err=>{return})
 	},
 };

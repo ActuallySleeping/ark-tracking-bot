@@ -1,13 +1,11 @@
 module.exports = {
 	name: 'clear',
+	guildOnly: true,
+	cooldown: 10,
+	permissions: 'MANAGE_MESSAGES',
 	aliases: ['c'],
-	execute(client, message, args, baselocation) {
+	execute(message, args, client, baselocation, command) {
 		message.delete({timeout:10}).catch(err=>{return})
-		if(!message.channel.permissionsFor(message.member).has("MANAGE_MESSAGES")){
-			message.channel.send("You must have the Manage Messages permission")
-			  .then(msg => {msg.delete({timeout:2500})})
-			return
-		}
 		let j=0,amountleft=args[0]
 		if(args[0]==0 || args[0]==undefined){amountleft=100}
 		if(args[0]>100){

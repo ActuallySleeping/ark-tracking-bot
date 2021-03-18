@@ -1,7 +1,8 @@
 module.exports = {
 	name: 'help',
+	cooldown: 60,
 	aliases: ['h'],
-	execute(client, message, args, baselocation) {
+	execute(message, args, client, baselocation, command) {
 		message.delete({timeout:10}).catch(err=>{return})
 		message.channel.send(" ‎",{embed:{
 			color: 15105570,
@@ -15,6 +16,6 @@ module.exports = {
 					+'**Invite the bot** \n ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎Follow the link: https://bit.ly/30LMOoe\n\n'
 			}]
 		}})
-		  .then(msg=>{msg.delete({timeout:20000}).catch(err=>{return})}).catch(err=>{return})
+		  .then(msg=>{msg.delete({timeout:60000}).catch(err=>{return})}).catch(err=>{return})
 	},
 };
