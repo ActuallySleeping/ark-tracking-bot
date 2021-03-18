@@ -7,6 +7,7 @@ const { DiscordSnowflake } = require('@sapphire/snowflake');
 const discordSnowflake = new DiscordSnowflake();
 const client = new Discord.Client();
 client.commands = new Discord.Collection();
+client.cooldowns = new Discord.Collection();
 
 const seperator = "@#>£"
 const baselocation = `${__dirname}/src/base.db`
@@ -167,8 +168,6 @@ async function generateMessage(timer,msg,channel,messageid,ipSave,portSave){
 	db.close()
 }
 
-
-
 client.once('ready' , async () => {
 	console.log("Ready to go!")	
 
@@ -195,31 +194,52 @@ function toString(array){
 }
 
 client.on('message', async (message) => {
-	if(message.content.startsWith("&")){
-		let db = new sqlite3.Database(baselocation)
-		db.all(`SELECT * FROM MessageLogs WHERE author=? AND authorid=?`,[message.author,message.author.id],(err,rows)=>{
-			if(rows.length>0 && rows!=undefined){
-				if(discordSnowflake.deconstruct(message.id).timestamp-discordSnowflake.deconstruct(rows[0].messageid).timestamp<7000){
-					return
-				}
-			}
-			if(message.guild==undefined){return}
-			let commandName = message.content.substr(1).split(" ")[0].toLowerCase()
-			let args = message.content.split(" ").slice(1)
-			
-			const command = client.commands.get(commandName) || client.commands.find(c => c.aliases && c.aliases.includes(commandName));
-			if (!command) return;
-			try {
-				if(command.args && !args.length){
-					message.channel.send('You need to provide one/or more argument(s)')
-					return 
-				}
-				command.execute(client, message, args, baselocation)
-			} catch (err) {
-				return
-			}
-			db.run(`REPLACE INTO MessageLogs (author,authorid,messageid) VALUES (?,?,?)`,[message.author,message.author.id,message.id])
-		})
-		db.close()
+	let commandName = message.content.substr(1).split(" ")[0].toLowerCase()
+	let args = message.content.split(" ").slice(1)
+	
+	const command = client.commands.get(commandName) || client.commands.find(c => c.aliases && c.aliases.includes(commandName));
+	if (!command) return;
+
+	const { cooldowns } = client;
+
+	if (!cooldowns.has(command.name)) {
+		cooldowns.set(command.name, new Discord.Collection());
 	}
-});
+
+	const now = Date.now();
+	const timestamps = cooldowns.get(command.name);
+	const cooldownAmount = (command.cooldown || 3) * 1000;
+
+	if (timestamps.has(message.author.id)) {
+		const expirationTime = timestamps.get(message.author.id) + cooldownAmount;
+
+		if (now < expirationTime) {
+			const timeLeft = (expirationTime - now) / 1000;
+			return 
+		}
+	}
+	timestamps.set(message.author.id, now);
+	setTimeout(() => timestamps.delete(message.author.id), cooldownAmount);
+
+	try {
+		if(command.guildOnly && message.channel.type === 'dm'){
+			message.channel.send('This command cannot be used inside DMs').then(msg=>{msg.delete({timeout:2500})})
+			return
+		}
+		if (command.permissions) {
+		 	const authorPerms = message.channel.permissionsFor(message.author);
+		 	if (!authorPerms || !authorPerms.has(command.permissions)) {
+		 		message.send('You are missing the permissions to do it').then(msg=>{msg.delete({timeout:2500})})
+		 		return
+		 	}
+		}
+		if(command.args && !args.length){
+			message.channel.send('You need to provide one/or more argument(s)').then(msg=>{msg.delete({timeout:5000})})
+			return 
+		}
+		
+		command.execute(message, args, client, baselocation, command)
+	} catch (err) {
+		return
+	}
+})
