@@ -21,13 +21,13 @@ Clear an amount of message, the default amount is 100
 ## Task List  
 - [x] Understand the basic of GitHub, Markdown, JavaScript  
 
-### Server tracking
+#### Server tracking
 - [x] Start tracking a server  
 - [x] Keep the server, message id of a tracked server  
 - [x] Stop tracking a server  
 - [ ] Add and remove a tracked server in a message  
 
-### Player tracking
+#### Player tracking
 - [ ] Start tracking one/multiples player(s) with an alert for one/multiples  
 - [ ] Keep the server, message id of a tracked player  
 - [ ] Stop tracking one/multiples player(s)  
