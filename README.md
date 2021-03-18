@@ -7,15 +7,15 @@ and be able to get warning when someone connected to a defined server
 
 ## Commands  
 ***&s / &start*** **x.x.x.x:p ...**  
-: Let you start the tracking of a server  
+    Let you start the tracking of a server  
 ***&stop*** *< messageid >*  
- : Stop the every tracking in a channel or only the one with the messageid you gave  
+    Stop the every tracking in a channel or only the one with the messageid you gave  
 ***&dc / &defaultcluster*** 
- : Give a list of ip with the format x.x.x.x:p for some cluster  
+    Give a list of ip with the format x.x.x.x:p for some cluster  
 ***&c / &clear*** *< amount >*
- : Clear an amount of message, the default amount is 100  
+    Clear an amount of message, the default amount is 100  
 ***Invite this bot***
- : You can invite the bot by [following this link](https://bit.ly/30LMOoe)  
+    You can invite the bot by [following this link](https://bit.ly/30LMOoe)  
 
 ## Task List  
 - [x] Understand the basic of GitHub, Markdown, JavaScript  
