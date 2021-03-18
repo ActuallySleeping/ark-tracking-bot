@@ -57,6 +57,7 @@ Clear an amount of message, the default amount is 100
 ┃  ┣ 📜base.bd  
 ┃  ┣ 📜config.json  
 ┃  ┗ 📜token.json  
+┣ 📜.gitignore  
 ┣ 📜index.js  
 ┣ 📜package.json  
 ┣ 📜package-lock.json  
