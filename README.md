@@ -34,23 +34,23 @@ Clear an amount of message, the default amount is 100
 - source-server-query
 
 ### What is the working tree looking like
-.
-+--node_modules/
-|  +--...
-+--src/
-|  +--commands/
-|     +--clear.js
-|     +--defaultcluster.js
-|     +--help.js
-|     +--reload.js
-|     +--start.js
-|     +--stop.js
-|  +--tools/
-|     +--embedGenerator.js
-|  +--base.bd
-|  +--config.json
-|  +--token.json
-+--index.js
-+--package.json
-+--package-lock.json
-+--README.md
+.  
++--node_modules/  
+|  +--...  
++--src/  
+|  +--commands/  
+|     +--clear.js  
+|     +--defaultcluster.js  
+|     +--help.js  
+|     +--reload.js  
+|     +--start.js  
+|     +--stop.js  
+|  +--tools/  
+|     +--embedGenerator.js  
+|  +--base.bd  
+|  +--config.json  
+|  +--token.json  
++--index.js  
++--package.json  
++--package-lock.json  
++--README.md  
