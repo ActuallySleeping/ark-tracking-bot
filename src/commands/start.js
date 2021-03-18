@@ -38,19 +38,21 @@ module.exports = {
 		}
 		let ips = ipSave;
 		let ports = portSave;
-		message.channel.send("‎ ‎",await tools.generateEmbed(client,ips,ports))
-		  .then(msg => {
-			let db = new sqlite3.Database(baselocation)
-			db.run(`INSERT INTO InformationMessage (guildid,channelid,messageid,ipsave,portSave) VALUES(?,?,?,?,?)`,[msg.guild.id,msg.channel.id,msg.id,toString(ipSave),toString(portSave)])
-			db.close()
+		tools.generateEmbed(client,ips,ports).then(embed => {
+			message.channel.send("‎ ‎",embed )
+			  .then(msg => {
+				let db = new sqlite3.Database(baselocation)
+				db.run(`INSERT INTO InformationMessage (guildid,channelid,messageid,ipsave,portSave) VALUES(?,?,?,?,?)`,[msg.guild.id,msg.channel.id,msg.id,toString(ipSave),toString(portSave)])
+				db.close()
 
-			let ips = ipSave;
-			let ports = portSave;
+				let ips = ipSave;
+				let ports = portSave;
 
-			let timer = setInterval(function() {
-				tools.generateMessage(timer,client,msg,msg.channel,msg.id,ips,ports)
-			}, 30000)
+				let timer = setInterval(function() {
+					tools.generateMessage(timer,client,msg,msg.channel,msg.id,ips,ports)
+				}, 30000)
 
-		  })
+			})
+		})
 	},
 };

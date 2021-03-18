@@ -29,7 +29,7 @@ client.once('ready' , async () => {
 		const channel = client.guilds.cache.get(row.guildid).channels.cache.get(row.channelid)
 		let timer = setInterval(function() {
 			tools.generateMessage(timer,client,undefined,channel,row.messageid,row.ipSave.split("#"),row.portSave.split("#").map(Number))
-		}, 1000)
+		}, 30000)
 	})	
 	db.close()
 })
