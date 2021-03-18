@@ -33,6 +33,11 @@ Clear an amount of message, the default amount is 100
 - [ ] Stop tracking one/multiples player(s)  
 - [ ] Add or remove a tracked player into a list, and remove the list if it's empty  
 
+#### Optional
+##### Make a source server query
+- [ ] finish the original projet
+- [ ] work on this
+
 ## How was the project made  
 ### Used Node_modules  
 - discord.js  
