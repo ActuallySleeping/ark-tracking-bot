@@ -43,7 +43,7 @@ Clear an amount of message, the default amount is 100
 ```
 📦  
 ┣ 📂node_modules/  
-┃   ┗ 📦...  
+┃  ┗ 📦...  
 ┣ 📂src/  
 ┃  ┣ 📂commands/  
 ┃  ┃  ┣ 📜clear.js  
@@ -57,8 +57,8 @@ Clear an amount of message, the default amount is 100
 ┃  ┣ 📜base.bd  
 ┃  ┣ 📜config.json  
 ┃  ┗ 📜token.json  
-┗ 📜index.js  
-┗ 📜package.json  
-┗ 📜package-lock.json  
+┣ 📜index.js  
+┣ 📜package.json  
+┣ 📜package-lock.json  
 ┗ 📜README.md  
 ```
