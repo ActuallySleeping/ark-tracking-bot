@@ -6,7 +6,7 @@ My goal was to let people track who is online on a server of their choice
 and be able to get warning when someone connected to a defined server  
 
 ## Commands  
-**&s / &start** *x.x.x.x:p ...*  
+**&s / &start** *x.x.x.x:p  < ... x.x.x.x:p ... >*  
 Let you start the tracking of a server  
 **&stop** *< messageid >*  
 Stop the every tracking in a channel or only the one with the messageid you gave  
