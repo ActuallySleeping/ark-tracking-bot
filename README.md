@@ -4,19 +4,26 @@
 This is my first projet regarding JavaScript as well as the use of GitHub  
 My goal was to let people track who is online on a server of their choice
 and be able to get warning when someone connected to a defined server  
-
+ 
 ## Commands  
 ### Server tracking
-**&s / &start** *x.x.x.x:p  < ... x.x.x.x:p ... >*  
+**&ss / &start** *x.x.x.x:p  < ... x.x.x.x:p ... >*  
 Let you start the tracking of a server  
-**&stop** *< message_id >*  
+**&so / &sstop** *< message_id >*  
 Stop the every tracking in a channel or only the one with the messageid you gave  
+**&sa / &sadd** *message_id ip:port < ... ip:port ... >*  
+Add a server in a message that already track a list of servers  
+**&sr / &sremove** *message_id server_name/ip:port < ... server_name/ip:port ... >*  
+Remove a server from a message that already track a list of servers  
 **&dc / &defaultcluster**  
 Give a list of ip with the format x.x.x.x:p for some cluster  
-**&e / &edit** *message_id server_name/ip:port < ... server_name/ip:port ... >*  
-Remove a server from a message that already track a list of servers  
 
 ### Player tracking  
+Player tracking is only working with the name of the player, since Steam server queries only return the name, and dont return the player steamid  
+**&ps / &ptart** *x.x.x.x:p players < ... players ... >*  
+Let you know when someone with a name connect on the server  
+**&po / &pstop** *< message_id >*  
+Stop tracking someone  
 
 ### Other utilities commands  
 **&c / &clear** *< amount >*  
