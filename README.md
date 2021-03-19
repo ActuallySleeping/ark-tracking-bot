@@ -76,7 +76,9 @@ Clear an amount of message, the default amount is 100
 ┃  ┃  ┣ 📜serverstart.js  (server)  
 ┃  ┃  ┗ 📜serverstop.js   (server)  
 ┃  ┣ 📂tools/  
-┃  ┃  ┗ 📜embedGenerator.js  
+┃  ┃  ┣ 📜embedGenerator.js 
+┃  ┃  ┣ 📜generateTracked.js  
+┃  ┃  ┗ 📜removeVersion.js
 ┃  ┗⚙️config.json
 ┣ ⚙️.gitignore  
 ┣ 📜index.js  
