@@ -48,9 +48,11 @@ Clear an amount of message, the default amount is 100
 - [x] Stop tracking one/multiples player(s)  
 
 #### Optional
+##### Full player connect tracking
+- [ ] work on it
+
 ##### Make a source server query
-- [ ] finish the original projet
-- [ ] work on this
+- [ ] work on it
 
 ## How was the project made  
 ### Used Node_modules  
