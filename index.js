@@ -20,7 +20,7 @@ for (const file of commandFiles) {
 }
 
 client.once('ready' , async () => {
-	console.log("Ready to go!")	
+	console.log("Ready to go!")
 
 	client.user.setActivity('🔧 maintenance', { type: 'PLAYING' })
 	  .catch(err=>{return});
@@ -49,15 +49,12 @@ client.on('message', async (message) => {
 	if (!command) return;
 
 	const { cooldowns } = client;
-
 	if (!cooldowns.has(command.name)) {
 		cooldowns.set(command.name, new Discord.Collection());
 	}
-
 	const now = Date.now();
 	const timestamps = cooldowns.get(command.name);
 	const cooldownAmount = (command.cooldown || 3) * 1000;
-
 	if (timestamps.has(message.author.id)) {
 		const expirationTime = timestamps.get(message.author.id) + cooldownAmount;
 
