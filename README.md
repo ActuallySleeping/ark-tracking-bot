@@ -4,13 +4,14 @@
 This is my first projet regarding JavaScript as well as the use of GitHub  
 My goal was to let people track who is online on a server of their choice
 and be able to get warning when someone connected to a defined server  
- 
+
 ## Commands  
 ### Server tracking
 **&ss / &start** *x.x.x.x:p  < ... x.x.x.x:p ... >*  
 Let you start the tracking of a server  
 **&so / &sstop** *< message_id >*  
 Stop the every tracking in a channel or only the one with the messageid you gave  
+The message/channel you stoped can take up to 30s to delete (all) the message(s)  
 **&sa / &sadd** *message_id ip:port < ... ip:port ... >*  
 Add a server in a message that already track a list of servers  
 **&sr / &sremove** *message_id server_name/ip:port < ... server_name/ip:port ... >*  
@@ -19,7 +20,7 @@ Remove a server from a message that already track a list of servers
 Give a list of ip with the format x.x.x.x:p for some cluster  
 
 ### Player tracking  
-Player tracking is only working with the name of the player, since Steam server queries only return the name, and dont return the player steamid  
+*Player tracking is only working with the name of the player, since Steam server queries only return the name, and dont return the player steamid*  
 **&ps / &ptart** *x.x.x.x:p players < ... players ... >*  
 Let you know when someone with a name connect on the server  
 **&po / &pstop** *< message_id >*  
@@ -43,9 +44,8 @@ Clear an amount of message, the default amount is 100
 
 #### Player tracking
 - [ ] Start tracking one/multiples player(s) with an alert for one/multiples  
-- [ ] Keep the server, message id of a tracked player  
+- [x] Keep the server, message id of a tracked player  
 - [ ] Stop tracking one/multiples player(s)  
-- [ ] Add or remove a tracked player into a list, and remove the list if it's empty  
 
 #### Optional
 ##### Make a source server query
@@ -68,9 +68,13 @@ Clear an amount of message, the default amount is 100
 ┃  ┃  ┣ 📜clear.js  
 ┃  ┃  ┣ 📜defaultcluster.js  
 ┃  ┃  ┣ 📜help.js  
+┃  ┃  ┣ 📜playerstart.js  (player)  
+┃  ┃  ┣ 📜playerstop.js   (player)  
 ┃  ┃  ┣ 📜reload.js  
-┃  ┃  ┣ 📜start.js  
-┃  ┃  ┗ 📜stop.js  
+┃  ┃  ┣ 📜serveradd.js    (server)  
+┃  ┃  ┣ 📜serverremove.js (server)  
+┃  ┃  ┣ 📜serverstart.js  (server)  
+┃  ┃  ┗ 📜serverstop.js   (server)  
 ┃  ┣ 📂tools/  
 ┃  ┃  ┗ 📜embedGenerator.js  
 ┃  ┗⚙️config.json
@@ -84,3 +88,10 @@ Clear an amount of message, the default amount is 100
 ┣ 🗄️base.bd  
 ┗ ⚙️token.json  
 ```
+### What are the tables inside the database  
+**InformationMessage**  
+Keep the information about the Message that are used to track a server, and which server is going to be tracked.  
+**InformationPlayer**  
+Keep the information about who's being track in which channel in which discord and on what server.  
+**InformationServer**  
+Keep the information about the name, map, game of a server, in case the server is currently offline/timeout.  
