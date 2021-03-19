@@ -11,12 +11,12 @@ function toString(array){
 }
 
 module.exports = {
-	name: 'start',
+	name: 'serverstart',
 	args: true,
 	cooldown: 10,
 	permissions: ['MANAGE_MESSAGES','MANAGE_SERVER'],
 	guildOnly: true,
-	aliases: ['s','sa'],
+	aliases: ['ss','sstart','servers'],
 	async execute(message, args, client, baselocation, command) {
 		message.delete({timeout:10}).catch(err=>{return})
 		if(!(message.channel.permissionsFor(message.member).has("MANAGE_GUILD") || message.author.id=="224142905537855489")){

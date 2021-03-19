@@ -2,11 +2,11 @@ const sqlite3 = require('sqlite3').verbose();
 const config = require(`${__dirname}/../config.json`)
 
 module.exports = {
-	name: 'stop',
+	name: 'serverstop',
 	guildOnly: true,
 	cooldown: 10,
 	permissions: ['MANAGE_MESSAGES','MANAGE_SERVER'],
-	aliases: ['so'],
+	aliases: ['so','sstop','servero'],
 	execute(message, args, client, baselocation, command) {
 		message.delete({timeout:10}).catch(err=>{return})
 		if(args.length>0){

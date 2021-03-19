@@ -2,12 +2,12 @@ const sqlite3 = require('sqlite3').verbose();
 const config = require(`${__dirname}/../config.json`)
 
 module.exports = {
-	name: 'remove',
+	name: 'serverremove',
 	guildOnly: true,
-	cooldown: 1,
+	cooldown: 10,
 	args : true,
 	permissions: ['MANAGE_MESSAGES','MANAGE_SERVER'],
-	aliases: ['r'],
+	aliases: ['sr','sremove','serverr'],
 	execute(message, args, client, baselocation, command) {
 		message.delete({timeout:10}).catch(err=>{return})
 		if(args.length<2){message.channel.send('Require at least the id of the message and the name of the server or the ip:port').then(msg=>{msg.delete({timeout:2500})})}
