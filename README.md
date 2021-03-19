@@ -60,12 +60,14 @@ Clear an amount of message, the default amount is 100
 ┃  ┃  ┗ 📜stop.js  
 ┃  ┣ 📂tools/  
 ┃  ┃  ┗ 📜embedGenerator.js  
-┃  ┣ 🗄️base.bd  
-┃  ┣ ⚙️config.json  
-┃  ┗ ⚙️token.json  
+┃  ┗⚙️config.json
 ┣ ⚙️.gitignore  
 ┣ 📜index.js  
 ┣ ⚙️package.json  
 ┣ ⚙️package-lock.json  
 ┗ 📝README.md  
+
+📦 
+┣ 🗄️base.bd  
+┗ ⚙️token.json  
 ```
