@@ -44,7 +44,7 @@ function createFields(embedMessage){
 				j++
 			}
 			field.push({
-			name:splitmessage[i*5]+" - "+removeVersion(splitmessage[i*5+1])+splitmessage[i*5+2],
+			name:splitmessage[i*5]+" - "+splitmessage[i*5+1]+splitmessage[i*5+2],
 			value:"```ini\n\n"+buffer+"```"})
 		}
 	}
@@ -89,8 +89,8 @@ const generateEmbed = async (client,ips,ports) =>{
 				})	
 			}
 			else{
-				db.run(`REPLACE INTO InformationServer (ip,port,name,map,game) VALUES (?,?,?,?,?)`,[ips[i],ports[i],info.name,info.map,info.game])
-				embedMessage += info.map + separator + info.name + separator+ "" + separator + info.game + separator
+				db.run(`REPLACE INTO InformationServer (ip,port,name,map,game) VALUES (?,?,?,?,?)`,[ips[i],ports[i],removeVersion(info.name),info.map,info.game])
+				embedMessage += info.map + separator + removeVersion(info.name) + separator+ "" + separator + info.game + separator
 			}
 			db.close()
 		}).catch(console.log)
@@ -122,23 +122,23 @@ const generateEmbed = async (client,ips,ports) =>{
 
 /*
 */
-async function generateMessage(timer,client,msg,channel,messageid,ipSave,portSave){
+async function generateMessage(timer,client,msg,channel,messageid){
 	let db = new sqlite3.Database(baselocation)
-	await db.all(`SELECT * FROM InformationMessage WHERE messageid=?`,messageid, (err,rows)=>{
+	await db.all(`SELECT * FROM InformationMessage WHERE messageid=? and channelid=?`,[messageid,channel.id], (err,rows)=>{
 		if(rows.length>0 && rows.length!=undefined){
 			channel.messages.fetch(messageid)
 			  .catch(err =>{return})
 			  .then(async msg =>{
 				if(!(msg==undefined || msg.deleted==true)){
-			    	let ips=ipSave
-					let ports=portSave
+			    	let ips=rows[0].ipSave.split("#")
+					let ports=rows[0].portSave.split("#").map(Number)
 					msg.edit(" ‎",await generateEmbed(client,ips,ports))
 			  	}
 			  	else{
 					channel.send("‎The message logged as been deleted, a new one will be generated")
 					  .then(msg => {
 						db.run(`UPDATE InformationMessage SET messageid=? WHERE messageid=?`,[msg.id,messageid])
-						generateMessage(timer,client,msg,channel,msg.id,ipSave,portSave)
+						generateMessage(timer,client,msg,channel,msg.id)
 					})
 				}
 			})
@@ -147,7 +147,7 @@ async function generateMessage(timer,client,msg,channel,messageid,ipSave,portSav
 			channel.messages.fetch(messageid)
 			  .catch(err=>{return})
 			  .then(msg =>{
-			  	msg.delete()
+			  	msg.delete().catch(err=>{return})
 			  })
 			clearInterval(timer);
 		}
@@ -155,4 +155,4 @@ async function generateMessage(timer,client,msg,channel,messageid,ipSave,portSav
 	db.close()
 }
 
-module.exports = { generateMessage, generateEmbed }
+module.exports = { generateMessage, generateEmbed, removeVersion }
