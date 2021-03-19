@@ -1,10 +1,12 @@
 const sqlite3 = require('sqlite3').verbose();
 const query = require("source-server-query");
 
+const rv = require(`${__dirname}/removeVersion.js`)
 const config = require(`${__dirname}/../config.json`)
 
 const separator = config.separator
 const baselocation = `${__dirname}/../../../base.db`
+
 
 /*Change the display of the time 
 	@param time Int, contain the time in seconds, to transform 
@@ -15,16 +17,6 @@ function timesetter(time){
 	if(time<60*60){return Math.floor(time/60)+"m"}
 	if(time<60*60*24){return Math.floor(time/(60*60))+"h "+Math.floor(time/60-(Math.floor(time/(60*60))*60))+"m"}
 	else{return	Math.floor(time/(60*60*24))+"d "+Math.floor(time/(60*60)-(Math.floor(time/(60*60*24))*24))+"h "+Math.floor(time/60-(Math.floor(time/(60*60))*60))+"m"}
-}
-
-function removeVersion(message){
-	let splitmessage = message.split("-")
-	r=""
-	for(let i=0;i<splitmessage.length-2;i++){
-		r+=splitmessage[i]+"-"
-	}
-	r+=splitmessage[splitmessage.length-2]
-	return r
 }
 
 /*Generate the fields of each server with the player online
@@ -89,8 +81,8 @@ const generateEmbed = async (client,ips,ports) =>{
 				})	
 			}
 			else{
-				db.run(`REPLACE INTO InformationServer (ip,port,name,map,game) VALUES (?,?,?,?,?)`,[ips[i],ports[i],removeVersion(info.name),info.map,info.game])
-				embedMessage += info.map + separator + removeVersion(info.name) + separator+ "" + separator + info.game + separator
+				db.run(`REPLACE INTO InformationServer (ip,port,name,map,game) VALUES (?,?,?,?,?)`,[ips[i],ports[i],rv.removeVersion(info.name),info.map,info.game])
+				embedMessage += info.map + separator + rv.removeVersion(info.name) + separator+ "" + separator + info.game + separator
 			}
 			db.close()
 		}).catch(console.log)
@@ -155,4 +147,4 @@ async function generateMessage(timer,client,msg,channel,messageid){
 	db.close()
 }
 
-module.exports = { generateMessage, generateEmbed, removeVersion }
+module.exports = { generateMessage, generateEmbed }
