@@ -4,13 +4,13 @@ const sqlite3 = require('sqlite3').verbose();
 
 const tools = require(`${__dirname}/src/tools/embedGenerator.js`)
 const config = require(`${__dirname}/src/config.json`)
-const baselocation = `${__dirname}/src/base.db`
+const baselocation = `${__dirname}/../base.db`
 
 const client = new Discord.Client();
 client.commands = new Discord.Collection();
 client.cooldowns = new Discord.Collection();
 
-client.login(require(`${__dirname}/src/token.json`))
+client.login(require(`${__dirname}/../token.json`))
 
 const commandFiles = fs.readdirSync(`${__dirname}/src/commands`).filter(file => file.endsWith('.js'));
 for (const file of commandFiles) {

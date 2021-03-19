@@ -4,7 +4,7 @@ const query = require("source-server-query");
 const config = require(`${__dirname}/../config.json`)
 
 const separator = config.separator
-const baselocation = `${__dirname}/../base.db`
+const baselocation = `${__dirname}/../../../base.db`
 
 /*Change the display of the time 
 	@param time Int, contain the time in seconds, to transform 
