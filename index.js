@@ -2,7 +2,8 @@ const fs = require('fs');
 const Discord = require('discord.js')
 const sqlite3 = require('sqlite3').verbose();
 
-const tools = require(`${__dirname}/src/tools/embedGenerator.js`)
+const servertools = require(`${__dirname}/src/tools/embedGenerator.js`)
+const playertools = require(`${__dirname}/src/tools/generateTracked.js`)
 const config = require(`${__dirname}/src/config.json`)
 const baselocation = `${__dirname}/../base.db`
 
@@ -28,9 +29,14 @@ client.once('ready' , async () => {
 	await db.each(`SELECT * FROM InformationMessage`,[], (err,row) =>{
 		const channel = client.guilds.cache.get(row.guildid).channels.cache.get(row.channelid)
 		let timer = setInterval(function() {
-			tools.generateMessage(timer,client,undefined,channel,row.messageid)
-		}, 30000)
+			servertools.generateMessage(timer,client,undefined,channel,row.messageid)
+		}, 60000)
 	})	
+	await db.each(`SELECT * FROM InformationPlayer`,[],(err,row) =>{
+		let timer = setInterval(function(){
+			playertools.generateTracked(timer,client,row.guildid,row.channelid)
+		}, 60000)
+	})
 	db.close()
 })
 

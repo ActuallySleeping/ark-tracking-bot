@@ -19,11 +19,6 @@ module.exports = {
 	aliases: ['ss','sstart','servers'],
 	async execute(message, args, client, baselocation, command) {
 		message.delete({timeout:10}).catch(err=>{return})
-		if(!(message.channel.permissionsFor(message.member).has("MANAGE_GUILD") || message.author.id=="224142905537855489")){
-			message.channel.send("You must have the Manage Server permission")
-			  .then(msg => {msg.delete({timeout:2500})})
-		return
-		}
 
 		let ipSave=[]
 		let portSave=[]
