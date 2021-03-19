@@ -28,13 +28,14 @@ client.once('ready' , async () => {
 	await db.each(`SELECT * FROM InformationMessage`,[], (err,row) =>{
 		const channel = client.guilds.cache.get(row.guildid).channels.cache.get(row.channelid)
 		let timer = setInterval(function() {
-			tools.generateMessage(timer,client,undefined,channel,row.messageid,row.ipSave.split("#"),row.portSave.split("#").map(Number))
-		}, 30000)
+			tools.generateMessage(timer,client,undefined,channel,row.messageid)
+		}, 1000)
 	})	
 	db.close()
 })
 
 client.on('message', async (message) => {
+	if(!(message.content.startsWith("&"))){return}
 	let commandName = message.content.substr(1).split(" ")[0].toLowerCase()
 	let args = message.content.split(" ").slice(1)
 	
