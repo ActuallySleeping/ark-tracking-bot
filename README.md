@@ -6,13 +6,19 @@ My goal was to let people track who is online on a server of their choice
 and be able to get warning when someone connected to a defined server  
 
 ## Commands  
+### Server tracking
 **&s / &start** *x.x.x.x:p  < ... x.x.x.x:p ... >*  
 Let you start the tracking of a server  
-**&stop** *< messageid >*  
+**&stop** *< message_id >*  
 Stop the every tracking in a channel or only the one with the messageid you gave  
 **&dc / &defaultcluster**  
-Give a list of ip with the format x.x.x.x:p for some cluster 
+Give a list of ip with the format x.x.x.x:p for some cluster  
+**&e / &edit** *message_id server_name/ip:port < ... server_name/ip:port ... >*  
+Remove a server from a message that already track a list of servers  
 
+### Player tracking  
+
+### Other utilities commands  
 **&c / &clear** *< amount >*  
 Clear an amount of message, the default amount is 100  
 
@@ -26,7 +32,7 @@ Clear an amount of message, the default amount is 100
 - [x] Start tracking a server  
 - [x] Keep the server, message id of a tracked server  
 - [x] Stop tracking a server  
-- [ ] Add and remove a tracked server in a message  
+- [x] Add and remove a tracked server in a message  
 
 #### Player tracking
 - [ ] Start tracking one/multiples player(s) with an alert for one/multiples  
