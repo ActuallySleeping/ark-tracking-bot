@@ -43,9 +43,9 @@ Clear an amount of message, the default amount is 100
 - [x] Add and remove a tracked server in a message  
 
 #### Player tracking
-- [ ] Start tracking one/multiples player(s) with an alert for one/multiples  
+- [x] Start tracking one/multiples player(s) with an alert for one/multiples  
 - [x] Keep the server, message id of a tracked player  
-- [ ] Stop tracking one/multiples player(s)  
+- [x] Stop tracking one/multiples player(s)  
 
 #### Optional
 ##### Make a source server query
