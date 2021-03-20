@@ -1,7 +1,7 @@
 ![ARK: Survival Evolved main background](https://store-images.s-microsoft.com/image/apps.49771.68672594993004535.abb7a42a-f75b-44f2-8afd-204cb3d19eb6.df63910d-755c-40d4-90c0-95d214d3ccd9?mode=scale&q=90&h=1080&w=1920&background=%23FFFFFF)
 # Discord bot for player and server tracking on ARK  
 ## Introduction  
-This is my first projet regarding JavaScript as well as the use of GitHub  
+This is my first projet regarding JavaScript as well as the use of GitHub  a
 My goal was to let people track who is online on a server of their choice
 and be able to get warning when someone connected to a defined server  
 
