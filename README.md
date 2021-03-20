@@ -12,9 +12,9 @@ Let you start the tracking of a server
 **&so / &sstop** *< message_id >*  
 Stop the every tracking in a channel or only the one with the messageid you gave  
 The message/channel you stoped can take up to 30s to delete (all) the message(s)  
-**&sa / &sadd** *message_id ip:port < ... ip:port ... >*  
+**&sa / &sadd** *message_id x.x.x.x:port < ... x.x.x.x:port ... >*  
 Add a server in a message that already track a list of servers  
-**&sr / &sremove** *message_id server_name/ip:port < ... server_name/ip:port ... >*  
+**&sr / &sremove** *message_id x.x.x.x:port*  
 Remove a server from a message that already track a list of servers  
 **&dc / &defaultcluster**  
 Give a list of ip with the format x.x.x.x:p for some cluster  

@@ -23,46 +23,32 @@ module.exports = {
 		db.all(`SELECT * FROM InformationMessage WHERE messageid=? AND channelid=?`,[args[0],message.channel.id], (err,rows) => {
 			if(rows!=undefined && rows.length>0){
 				if(args[1].includes(':')){
-					for (let row in rows){
-						for (let i=0;i<row.ipSave.split("#").length;i++){
-							console.log(args[1].split(':')[1],row.portSave.split("#")[i])
-							if(args[1].split(':')[0] === row.ipSave.split("#")[i] && args[1].split(':')[1] === row.portSave.split("#")[i]){
-								let ipSave="",portSave=""
-								for (let j=0;j<i;j++){
-									ipSave += row.ipSave.split('#')[j]
-									portSave += row.portSave.split('#')[j]
-								}
-								for (let j=i+1;j<row.ipSave.split("#").length;j++){
-									ipSave += row.ipSave.split('#')[j]
-									portSave += row.portSave.split('#')[j]
-								}
-								db.run('UPDATE InformationMessage SET ipSave=?,portSave=? WHERE messageid=? AND channelid=?',[ipSave,portSave,args[0],message.channel.id])
+					for (let k=0;k<rows[0].ipSave.split("#").length;k++){
+						if(args[1].split(':')[0] == rows[0].ipSave.split("#")[k] && Number(rows[0].portSave.split("#")[k])==Number(args[1].split(':')[1])){
+							let ipSave="",portSave=""
+							for (let j=0;j<k;j++){
+								ipSave += rows[0].ipSave.split('#')[j] + '#'
+								portSave += rows[0].portSave.split('#')[j] + '#'
 							}
+							for (let j=k+1;j<rows[0].ipSave.split("#").length;j++){
+								ipSave += rows[0].ipSave.split('#')[j] + '#'
+								portSave += rows[0].portSave.split('#')[j] + '#'
+							}
+							let fIpSave = "", fPortSave = "", j=rows[0].ipSave.split("#").length-2
+							for (let i=0;i<j;i++){
+								fIpSave+=ipSave.split('#')[i]+'#'
+								fPortSave+=portSave.split('#')[i]+'#'
+							}
+							fIpSave+=ipSave.split('#')[j]
+							fPortSave+=portSave.split('#')[j]
+							db.all(`SELECT * FROM InformationUsers WHERE authorid=?`,message.author.id,(err,rows)=>{
+								if(rows!=undefined && rows.length>0){
+									db.run(`REPLACE INTO InformationUsers(authorid,nbServerTracking,nbPlayerTracking) VALUES(?,?,?)`,[message.author.id,rows[0].nbServerTracking-1,0])
+								}
+							})
+							db.run('UPDATE InformationMessage SET ipSave=?,portSave=? WHERE messageid=? AND channelid=?',[fIpSave,fPortSave,args[0],message.channel.id])
 						}
 					}
-				}
-				else{
-					db.all(`SELECT * FROM InformationServer WHERE name=?`,args[1],(err,rows2)=>{
-						if(rows2!=undefined && rows2.length>0){
-							let ipSave ="",portSave=""
-							for (let i=0;i<rows[0].ipSave.split("#").length;i++){
-								if(rows[0].ipSave.split("#")[i]===rows2[0].ip && rows[0].portSave.split("#").map(Number)[i]!=rows2[0].port){
-									ipSave+=rows[0].ipSave.split("#")[i]+"#"
-									portSave+=rows[0].portSave.split("#")[i]+"#"
-								}
-							}
-							ipSave=ipSave.split("#")
-							portSave=portSave.split("#")
-							let j=ipSave.length-3,fIpSave="",fPortSave=""
-							for(let i=0;i<j;i++){
-								fIpSave+=ipSave[i]+"#"
-								fPortSave+=portSave[i]+'#'
-							}
-							fIpSave+=ipSave[ipSave.length-2]
-							fPortSave+=portSave[ipSave.length-2]
-							db.run('UPDATE InformationMessage SET ipSave=?,portSave=? WHERE messageid=? AND channelid=?',[fIpSave,fPortSave,rows[0].messageid,message.channel.id])
-						}
-					})
 				}
 			}
 		})

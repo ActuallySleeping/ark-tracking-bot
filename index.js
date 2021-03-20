@@ -26,16 +26,16 @@ client.once('ready' , async () => {
 	  .catch(err=>{return});
 
 	let db = new sqlite3.Database(baselocation)
-	await db.each(`SELECT * FROM InformationMessage`,[], (err,row) =>{
+	db.each(`SELECT * FROM InformationMessage`,[], (err,row) =>{
 		const channel = client.guilds.cache.get(row.guildid).channels.cache.get(row.channelid)
 		let timer = setInterval(function() {
 			servertools.generateMessage(timer,client,undefined,channel,row.messageid)
-		}, 60000)
+		}, 10000)
 	})	
-	await db.each(`SELECT * FROM InformationPlayer`,[],(err,row) =>{
+	db.each(`SELECT * FROM InformationPlayer`,[],(err,row) =>{
 		let timer = setInterval(function(){
 			playertools.generateTracked(timer,client,row.guildid,row.channelid)
-		}, 60000)
+		}, 10000)
 	})
 	db.close()
 })
