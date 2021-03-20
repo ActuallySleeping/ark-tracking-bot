@@ -20,22 +20,22 @@ for (const file of commandFiles) {
 }
 
 client.once('ready' , async () => {
-	console.log("Ready to go!")	
+	console.log("Ready to go!")
 
 	client.user.setActivity('🔧 maintenance', { type: 'PLAYING' })
 	  .catch(err=>{return});
 
 	let db = new sqlite3.Database(baselocation)
-	await db.each(`SELECT * FROM InformationMessage`,[], (err,row) =>{
+	db.each(`SELECT * FROM InformationMessage`,[], (err,row) =>{
 		const channel = client.guilds.cache.get(row.guildid).channels.cache.get(row.channelid)
 		let timer = setInterval(function() {
 			servertools.generateMessage(timer,client,undefined,channel,row.messageid)
-		}, 60000)
+		}, 10000)
 	})	
-	await db.each(`SELECT * FROM InformationPlayer`,[],(err,row) =>{
+	db.each(`SELECT * FROM InformationPlayer`,[],(err,row) =>{
 		let timer = setInterval(function(){
 			playertools.generateTracked(timer,client,row.guildid,row.channelid)
-		}, 60000)
+		}, 10000)
 	})
 	db.close()
 })
@@ -49,15 +49,12 @@ client.on('message', async (message) => {
 	if (!command) return;
 
 	const { cooldowns } = client;
-
 	if (!cooldowns.has(command.name)) {
 		cooldowns.set(command.name, new Discord.Collection());
 	}
-
 	const now = Date.now();
 	const timestamps = cooldowns.get(command.name);
 	const cooldownAmount = (command.cooldown || 3) * 1000;
-
 	if (timestamps.has(message.author.id)) {
 		const expirationTime = timestamps.get(message.author.id) + cooldownAmount;
 

@@ -1,7 +1,7 @@
 ![ARK: Survival Evolved main background](https://store-images.s-microsoft.com/image/apps.49771.68672594993004535.abb7a42a-f75b-44f2-8afd-204cb3d19eb6.df63910d-755c-40d4-90c0-95d214d3ccd9?mode=scale&q=90&h=1080&w=1920&background=%23FFFFFF)
 # Discord bot for player and server tracking on ARK  
 ## Introduction  
-This is my first projet regarding JavaScript as well as the use of GitHub  
+This is my first projet regarding JavaScript as well as the use of GitHub  a
 My goal was to let people track who is online on a server of their choice
 and be able to get warning when someone connected to a defined server  
 
@@ -12,9 +12,9 @@ Let you start the tracking of a server
 **&so / &sstop** *< message_id >*  
 Stop the every tracking in a channel or only the one with the messageid you gave  
 The message/channel you stoped can take up to 30s to delete (all) the message(s)  
-**&sa / &sadd** *message_id ip:port < ... ip:port ... >*  
+**&sa / &sadd** *message_id x.x.x.x:port < ... x.x.x.x:port ... >*  
 Add a server in a message that already track a list of servers  
-**&sr / &sremove** *message_id server_name/ip:port < ... server_name/ip:port ... >*  
+**&sr / &sremove** *message_id x.x.x.x:port*  
 Remove a server from a message that already track a list of servers  
 **&dc / &defaultcluster**  
 Give a list of ip with the format x.x.x.x:p for some cluster  
@@ -48,9 +48,11 @@ Clear an amount of message, the default amount is 100
 - [x] Stop tracking one/multiples player(s)  
 
 #### Optional
+##### Full player connect tracking
+- [ ] work on it
+
 ##### Make a source server query
-- [ ] finish the original projet
-- [ ] work on this
+- [ ] work on it
 
 ## How was the project made  
 ### Used Node_modules  
@@ -76,7 +78,9 @@ Clear an amount of message, the default amount is 100
 ┃  ┃  ┣ 📜serverstart.js  (server)  
 ┃  ┃  ┗ 📜serverstop.js   (server)  
 ┃  ┣ 📂tools/  
-┃  ┃  ┗ 📜embedGenerator.js  
+┃  ┃  ┣ 📜embedGenerator.js 
+┃  ┃  ┣ 📜generateTracked.js  
+┃  ┃  ┗ 📜removeVersion.js
 ┃  ┗⚙️config.json
 ┣ ⚙️.gitignore  
 ┣ 📜index.js  

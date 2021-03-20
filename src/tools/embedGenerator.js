@@ -84,7 +84,6 @@ const generateEmbed = async (client,ips,ports) =>{
 				db.run(`REPLACE INTO InformationServer (ip,port,name,map,game) VALUES (?,?,?,?,?)`,[ips[i],ports[i],rv.removeVersion(info.name),info.map,info.game])
 				embedMessage += info.map + separator + rv.removeVersion(info.name) + separator+ "" + separator + info.game + separator
 			}
-			db.close()
 		}).catch(console.log)
 
 		await query.players(ips[i],ports[i],5000).then(players=>{
@@ -120,20 +119,25 @@ async function generateMessage(timer,client,msg,channel,messageid){
 		if(rows.length>0 && rows.length!=undefined){
 			channel.messages.fetch(messageid)
 			  .catch(err =>{return})
-			  .then(async msg =>{
+			  .then(async (msg) =>{
 				if(!(msg==undefined || msg.deleted==true)){
 			    	let ips=rows[0].ipSave.split("#")
 					let ports=rows[0].portSave.split("#").map(Number)
-					msg.edit(" ‎",await generateEmbed(client,ips,ports))
+					msg.edit(" ‎",await generateEmbed(client,ips,ports)).catch(err=>{return})
 			  	}
 			  	else{
 					channel.send("‎The message logged as been deleted, a new one will be generated")
-					  .then(msg => {
-						db.run(`UPDATE InformationMessage SET messageid=? WHERE messageid=?`,[msg.id,messageid])
-						generateMessage(timer,client,msg,channel,msg.id)
+					  .catch(err=>{return})
+					  .then(async msg2 => {
+					  	clearInterval(timer);
+						db.run(`UPDATE InformationMessage SET messageid=? WHERE messageid=?`,[msg2.id,messageid])
+						let newtimer = setInterval(function() {
+							generateMessage(newtimer,client,msg2,channel,msg2.id)
+						}, 3000)
 					})
 				}
 			})
+			  .catch(err=>{return})
 		}
 		else{
 			channel.messages.fetch(messageid)
@@ -141,10 +145,10 @@ async function generateMessage(timer,client,msg,channel,messageid){
 			  .then(msg =>{
 			  	msg.delete().catch(err=>{return})
 			  })
+			  .catch(err=>{return})
 			clearInterval(timer);
 		}
 	})
-	db.close()
 }
 
 module.exports = { generateMessage, generateEmbed }
