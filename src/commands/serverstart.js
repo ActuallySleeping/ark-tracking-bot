@@ -21,18 +21,18 @@ module.exports = {
 		message.delete({timeout:10}).catch(err=>{return})
 
 		let db = new sqlite3.Database(baselocation)
-		await db.all(`SELECT * FROM InformationUsers WHERE authorid=?`,message.author.id,(err,rows)=>{
+		await db.all(`SELECT * FROM Users WHERE id=?`,message.author.id,(err,rows)=>{
 			if(rows!=undefined && rows.length>0){
-				if(rows[0].nbServerTracking>=20){
+				if(rows[0].servers>=20){
 					message.channel.send("You already follow 20 servers").then(msg=>{msg.delete({timeout:3500})}).catch(err=>{return})
 					return
 				}
-				if(rows[0].nbServerTracking + args.length >= 20){
-					message.channel.send(`You are going to follow too many server, you already follow ${rows[0].nbServerTracking} servers and wanted to follow ${args.length} more, and the maximum is 20`).then(msg=>{msg.delete({timeout:7500})}).catch(err=>{return})
+				if(rows[0].servers + args.length >= 20){
+					message.channel.send(`You are going to follow too many server, you already follow ${rows[0].servers} servers and wanted to follow ${args.length} more, and the maximum is 20`).then(msg=>{msg.delete({timeout:7500})}).catch(err=>{return})
 					return
 				}
 				else{
-					db.run(`REPLACE INTO InformationUsers(authorid,nbServerTracking,nbPlayerTracking) VALUES(?,?,?)`,[message.author.id,rows[0].nbServerTracking+args.length,0])
+					db.run(`REPLACE INTO Users(id,servers,players) VALUES(?,?,?)`,[message.author.id,rows[0].servers+args.length,rows[0].players])
 					let ipSave=[]
 					let portSave=[]
 					for(let i=0;i<args.length;i++){
@@ -45,7 +45,7 @@ module.exports = {
 						message.channel.send("‎ ‎",embed )
 						  .then(msg => {
 							let db = new sqlite3.Database(baselocation)
-							db.run(`INSERT INTO InformationMessage (guildid,channelid,messageid,ipsave,portSave) VALUES(?,?,?,?,?)`,[msg.guild.id,msg.channel.id,msg.id,toString(ipSave),toString(portSave)])
+							db.run(`INSERT INTO TrackedServers (guildid,channelid,messageid,ips,ports) VALUES(?,?,?,?,?)`,[msg.guild.id,msg.channel.id,msg.id,toString(ipSave),toString(portSave)])
 							db.close()
 
 							let ips = ipSave;
@@ -61,7 +61,7 @@ module.exports = {
 			}
 			else{
 				if(args.length<20){
-					db.run(`REPLACE INTO InformationUsers(authorid,nbServerTracking) VALUES(?,?)`,[message.author.id,args.length])
+					db.run(`REPLACE INTO Users(id,servers) VALUES(?,?)`,[message.author.id,args.length])
 					let ipSave=[]
 					let portSave=[]
 					for(let i=0;i<args.length;i++){
@@ -74,7 +74,7 @@ module.exports = {
 						message.channel.send("‎ ‎",embed )
 						  .then(msg => {
 							let db = new sqlite3.Database(baselocation)
-							db.run(`INSERT INTO InformationMessage (guildid,channelid,messageid,ipsave,portSave) VALUES(?,?,?,?,?)`,[msg.guild.id,msg.channel.id,msg.id,toString(ipSave),toString(portSave)])
+							db.run(`INSERT INTO TrackedServers (guildid,channelid,messageid,ips,ports) VALUES(?,?,?,?,?)`,[msg.guild.id,msg.channel.id,msg.id,toString(ipSave),toString(portSave)])
 							db.close()
 
 							let ips = ipSave;

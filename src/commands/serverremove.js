@@ -20,7 +20,7 @@ module.exports = {
 		args[1]+=" "
 
 		let db = new sqlite3.Database(baselocation)
-		db.all(`SELECT * FROM InformationMessage WHERE messageid=? AND channelid=?`,[args[0],message.channel.id], (err,rows) => {
+		db.all(`SELECT * FROM TrackedServers WHERE messageid=? AND channelid=?`,[args[0],message.channel.id], (err,rows) => {
 			if(rows!=undefined && rows.length>0){
 				if(args[1].includes(':')){
 					for (let k=0;k<rows[0].ipSave.split("#").length;k++){
@@ -41,12 +41,12 @@ module.exports = {
 							}
 							fIpSave+=ipSave.split('#')[j]
 							fPortSave+=portSave.split('#')[j]
-							db.all(`SELECT * FROM InformationUsers WHERE authorid=?`,message.author.id,(err,rows)=>{
+							db.all(`SELECT * FROM Users WHERE authorid=?`,message.author.id,(err,rows)=>{
 								if(rows!=undefined && rows.length>0){
-									db.run(`REPLACE INTO InformationUsers(authorid,nbServerTracking,nbPlayerTracking) VALUES(?,?,?)`,[message.author.id,rows[0].nbServerTracking-1,0])
+									db.run(`REPLACE INTO Users(authorid,nbServerTracking,nbPlayerTracking) VALUES(?,?,?)`,[message.author.id,rows[0].nbServerTracking-1,0])
 								}
 							})
-							db.run('UPDATE InformationMessage SET ipSave=?,portSave=? WHERE messageid=? AND channelid=?',[fIpSave,fPortSave,args[0],message.channel.id])
+							db.run('UPDATE TrackedServers SET ipSave=?,portSave=? WHERE messageid=? AND channelid=?',[fIpSave,fPortSave,args[0],message.channel.id])
 						}
 					}
 				}

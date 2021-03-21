@@ -12,18 +12,18 @@ module.exports = {
 
 		if(args.length>0){
 			let db = new sqlite3.Database(baselocation)
-			db.all(`SELECT FROM InformationMessage WHERE messageid=? AND channelid=? AND guildid=?`,[args[0],message.channel.id,message.guild.id],async (err,rows)=>{
+			db.all(`SELECT FROM TrackedServers WHERE messageid=? AND channelid=? AND guildid=?`,[args[0],message.channel.id,message.guild.id],async (err,rows)=>{
 				for (let i in rows){
 					let length = rows[i].ipSave.split('#').length
-					await db.all(`SELECT * FROM InformationUsers WHERE authorid=?`,message.author.id,(err,rows)=>{
+					await db.all(`SELECT * FROM Users WHERE authorid=?`,message.author.id,(err,rows)=>{
 						if(rows!=undefined && rows.length>0){
-							db.run(`REPLACE INTO InformationUsers(authorid,nbServerTracking,nbPlayerTracking) VALUES(?,?,?)`,[message.author.id,rows[0].nbServerTracking-length,rows[0].nbPlayerTracking])
+							db.run(`REPLACE INTO Users(authorid,nbServerTracking,nbPlayerTracking) VALUES(?,?,?)`,[message.author.id,rows[0].nbServerTracking-length,rows[0].nbPlayerTracking])
 						}
 					else{return}
 					})
 				}
 			})
-			db.run(`DELETE FROM InformationMessage WHERE messageid=? AND channelid=? AND guildid=?`,[args[0],message.channel.id,message.guild.id])
+			db.run(`DELETE FROM TrackedServers WHERE messageid=? AND channelid=? AND guildid=?`,[args[0],message.channel.id,message.guild.id])
 			db.close()
 			return
 		}
@@ -32,14 +32,14 @@ module.exports = {
 			if(rows!=undefined && rows.length>0){
 				for (let i in rows){
 					let length = rows[i].ipSave.split('#').length
-					await db.all(`SELECT * FROM InformationUsers WHERE authorid=?`,message.author.id,(err,rows)=>{
+					await db.all(`SELECT * FROM Users WHERE authorid=?`,message.author.id,(err,rows)=>{
 						if(rows!=undefined && rows.length>0){
-							db.run(`REPLACE INTO InformationUsers(authorid,nbServerTracking,nbPlayerTracking) VALUES(?,?,?)`,[message.author.id,rows[0].nbServerTracking-length,rows[0].nbPlayerTracking])
+							db.run(`REPLACE INTO Users(authorid,nbServerTracking,nbPlayerTracking) VALUES(?,?,?)`,[message.author.id,rows[0].nbServerTracking-length,rows[0].nbPlayerTracking])
 						}
 					else{return}
 					})
 				}
-				db.run(`DELETE FROM InformationMessage WHERE channelid=? AND guildid=?`,[message.channel.id,message.guild.id])
+				db.run(`DELETE FROM TrackedServers WHERE channelid=? AND guildid=?`,[message.channel.id,message.guild.id])
 			}
 			else{
 				message.channel.send(`Found no message to delete`).then(msg=>{msg.delete({timeout:2500})})

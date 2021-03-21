@@ -71,7 +71,7 @@ const generateEmbed = async (client,ips,ports) =>{
 		await query.info(ips[i],ports[i],1000).then(info=>{
 			let db = new sqlite3.Database(baselocation)
 			if(info.map==null && info.game==null){
-				db.all(`SELECT * FROM InformationServer WHERE ip=? AND port=?`,[ips[i],ports[i]], (err,rows)=>{
+				db.all(`SELECT * FROM SavedServers WHERE ip=? AND port=?`,[ips[i],ports[i]], (err,rows)=>{
 					if(rows.length>0){
 						embedMessage += rows[0].map + separator + rows[0].name       + separator +" - Not Responding" + separator + rows[0].game + separator
 					}
@@ -81,7 +81,7 @@ const generateEmbed = async (client,ips,ports) =>{
 				})	
 			}
 			else{
-				db.run(`REPLACE INTO InformationServer (ip,port,name,map,game) VALUES (?,?,?,?,?)`,[ips[i],ports[i],rv.removeVersion(info.name),info.map,info.game])
+				db.run(`REPLACE INTO SavedServers (ip,port,name,map,game) VALUES (?,?,?,?,?)`,[ips[i],ports[i],rv.removeVersion(info.name),info.map,info.game])
 				embedMessage += info.map + separator + rv.removeVersion(info.name) + separator+ "" + separator + info.game + separator
 			}
 		}).catch(console.log)
@@ -103,7 +103,7 @@ const generateEmbed = async (client,ips,ports) =>{
 	}
 	return {embed:{
 		color: 15105570,
-		author: {name : client.username,icon_url: client.user.avatarURL},
+		author: {name : client.username ,icon_url: client.user.avatarURL},
 		title: checkGame(embedMessage),
 		footer: {text: "Made by Leo#4265 with source-server-query"},
 		timestamp: Date.now(),
@@ -115,14 +115,14 @@ const generateEmbed = async (client,ips,ports) =>{
 */
 async function generateMessage(timer,client,msg,channel,messageid){
 	let db = new sqlite3.Database(baselocation)
-	await db.all(`SELECT * FROM InformationMessage WHERE messageid=? and channelid=?`,[messageid,channel.id], (err,rows)=>{
+	await db.all(`SELECT * FROM TrackedServers WHERE messageid=? and channelid=?`,[messageid,channel.id], (err,rows)=>{
 		if(rows.length>0 && rows.length!=undefined){
 			channel.messages.fetch(messageid)
 			  .catch(err =>{return})
 			  .then(async (msg) =>{
 				if(!(msg==undefined || msg.deleted==true)){
-			    	let ips=rows[0].ipSave.split("#")
-					let ports=rows[0].portSave.split("#").map(Number)
+			    	let ips=rows[0].ips.split("#")
+					let ports=rows[0].ports.split("#").map(Number)
 					msg.edit(" ‎",await generateEmbed(client,ips,ports)).catch(err=>{return})
 			  	}
 			  	else{
@@ -130,7 +130,7 @@ async function generateMessage(timer,client,msg,channel,messageid){
 					  .catch(err=>{return})
 					  .then(async msg2 => {
 					  	clearInterval(timer);
-						db.run(`UPDATE InformationMessage SET messageid=? WHERE messageid=?`,[msg2.id,messageid])
+						db.run(`UPDATE TrackedServers SET messageid=? WHERE messageid=?`,[msg2.id,messageid])
 						let newtimer = setInterval(function() {
 							generateMessage(newtimer,client,msg2,channel,msg2.id)
 						}, 3000)

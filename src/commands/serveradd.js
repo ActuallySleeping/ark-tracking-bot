@@ -13,7 +13,7 @@ module.exports = {
 		if(args.length<2){message.channel.send('Require at least the id of the message and the name of the server or the ip:port').then(msg=>{msg.delete({timeout:5000})})}
 		
 		let db = new sqlite3.Database(baselocation)
-		await db.all(`SELECT * FROM InformationUsers WHERE authorid=?`,message.author.id,(err,rows)=>{
+		await db.all(`SELECT * FROM Users WHERE authorid=?`,message.author.id,(err,rows)=>{
 			if(rows!=undefined && rows.length>0){
 				if(rows[0].nbServerTracking>=20){
 					message.channel.send("You already follow 20 servers").then(msg=>{msg.delete({timeout:3500})}).catch(err=>{return})
@@ -24,7 +24,7 @@ module.exports = {
 					return
 				}
 				else{
-					db.run(`REPLACE INTO InformationUsers(authorid,nbServerTracking,nbPlayerTracking) VALUES(?,?,?)`,[message.author.id,rows[0].nbServerTracking+args.length-1,rows[0].nbPlayerTracking])
+					db.run(`REPLACE INTO Users(authorid,nbServerTracking,nbPlayerTracking) VALUES(?,?,?)`,[message.author.id,rows[0].nbServerTracking+args.length-1,rows[0].nbPlayerTracking])
 					let ipSave="",portSave=""
 					for(let i=1;i<args.length;i++){
 						if(args[i].split(":").length!=2){
@@ -40,9 +40,9 @@ module.exports = {
 						if(i!=args.length-1){ipSave+='#';portSave+='#'}
 					}
 
-					db.all(`SELECT * FROM InformationMessage WHERE messageid=? AND channelid=?`,[args[0],message.channel.id], (err,rows) => {
+					db.all(`SELECT * FROM TrackedServers WHERE messageid=? AND channelid=?`,[args[0],message.channel.id], (err,rows) => {
 						if(rows!=undefined && rows.length>0){
-							db.run(`UPDATE InformationMessage SET ipSave=?,portSave=? WHERE messageid=? AND channelid=?`,[rows[0].ipSave+'#'+ipSave,rows[0].portSave+'#'+portSave,args[0],message.channel.id])
+							db.run(`UPDATE TrackedServers SET ipSave=?,portSave=? WHERE messageid=? AND channelid=?`,[rows[0].ipSave+'#'+ipSave,rows[0].portSave+'#'+portSave,args[0],message.channel.id])
 						}
 						else{
 							message.channel.send("Found no message with this ID in this channel").then(msg=>{msg.delete({timeout:2500})}).catch(err=>{return})
@@ -52,7 +52,7 @@ module.exports = {
 			}
 			else{
 				if(args.length<20){
-					db.run(`REPALCE INTO InformationUsers(authorid,nbServerTracking) VALUES(?,?)`,[message.author.id,args.length-1])
+					db.run(`REPALCE INTO Users(authorid,nbServerTracking) VALUES(?,?)`,[message.author.id,args.length-1])
 					let ipSave="",portSave=""
 					for(let i=1;i<args.length;i++){
 						if(args[i].split(":").length!=2){
@@ -68,9 +68,9 @@ module.exports = {
 						if(i!=args.length-1){ipSave+='#';portSave+='#'}
 					}
 
-					db.all(`SELECT * FROM InformationMessage WHERE messageid=? AND channelid=?`,[args[0],message.channel.id], (err,rows) => {
+					db.all(`SELECT * FROM TrackedServers WHERE messageid=? AND channelid=?`,[args[0],message.channel.id], (err,rows) => {
 						if(rows!=undefined && rows.length>0){
-							db.run(`UPDATE InformationMessage SET ipSave=?,portSave=? WHERE messageid=? AND channelid=?`,[rows[0].ipSave+'#'+ipSave,rows[0].portSave+'#'+portSave,args[0],message.channel.id])
+							db.run(`UPDATE TrackedServers SET ipSave=?,portSave=? WHERE messageid=? AND channelid=?`,[rows[0].ipSave+'#'+ipSave,rows[0].portSave+'#'+portSave,args[0],message.channel.id])
 						}
 						else{
 							message.channel.send("Found no message with this ID in this channel").then(msg=>{msg.delete({timeout:2500})}).catch(err=>{return})
