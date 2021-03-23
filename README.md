@@ -12,19 +12,7 @@ Let you start the tracking of a server
 **&so / &sstop** *< message_id >*  
 Stop the every tracking in a channel or only the one with the messageid you gave  
 The message/channel you stoped can take up to 30s to delete (all) the message(s)  
-**&sa / &sadd** *message_id x.x.x.x:port < ... x.x.x.x:port ... >*  
-Add a server in a message that already track a list of servers  
-**&sr / &sremove** *message_id x.x.x.x:port*  
-Remove a server from a message that already track a list of servers  
-**&dc / &defaultcluster**  
 Give a list of ip with the format x.x.x.x:p for some cluster  
-
-### Player tracking  
-*Player tracking is only working with the name of the player, since Steam server queries only return the name, and dont return the player steamid*  
-**&ps / &ptart** *x.x.x.x:p players < ... players ... >*  
-Let you know when someone with a name connect on the server  
-**&po / &pstop** *< message_id >*  
-Stop tracking someone  
 
 ### Other utilities commands  
 **&c / &clear** *< amount >*  
@@ -32,25 +20,16 @@ Clear an amount of message, the default amount is 100
 
 **Invite this bot**  
 ‎‎You can invite the bot by [following this link](https://bit.ly/30LMOoe)  
-
 ## Task List  
 - [x] Understand the basic of GitHub, Markdown, JavaScript  
 
 #### Server tracking
-- [x] Start tracking a server  
-- [x] Keep the server, message id of a tracked server  
-- [x] Stop tracking a server  
-- [x] Add and remove a tracked server in a message  
-
-#### Player tracking
-- [x] Start tracking one/multiples player(s) with an alert for one/multiples  
-- [x] Keep the server, message id of a tracked player  
-- [x] Stop tracking one/multiples player(s)  
+- [ ] Start tracking a server  
+- [ ] Keep the server, message id of a tracked server  
+- [ ] Stop tracking a server  
+- [ ] Add and remove a tracked server in a message  
 
 #### Optional
-##### Full player connect tracking
-- [ ] work on it
-
 ##### Make a source server query
 - [ ] work on it
 
