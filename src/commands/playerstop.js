@@ -12,38 +12,38 @@ module.exports = {
 		if(args.length>0){
 			if(args[0].split(':').length>1){
 				let db = new sqlite3.Database(baselocation)
-				db.all(`SELECT * FROM InformationPlayer WHERE ip=? AND port=? AND channelid=? AND guildid=?`,[args[0].split(':')[0],args[0].split(':')[1],message.channel.id,message.guild.id],(err,rows)=>{
+				db.all(`SELECT * FROM TrackedPlayers WHERE ip=? AND port=? AND channelid=? AND guildid=?`,[args[0].split(':')[0],args[0].split(':')[1],message.channel.id,message.guild.id],(err,rows)=>{
 					if(rows!=undefined && rows.length>0){
-						db.all(`SELECT * FROM InformationUsers WHERE authorid=?`,[message.author.id],(err,row)=>{
-							db.run(`REPLACE INTO InformationUsers(authorid,nbserverTracking,nbPlayerTracking) VALUES(?,?,?)`,[message.author.id,row[0].nbServerTracking,row[0].nbPlayerTracking-rows.length])
+						db.all(`SELECT * FROM Users WHERE authorid=?`,[message.author.id],(err,row)=>{
+							db.run(`REPLACE INTO Users(authorid,nbserverTracking,nbPlayerTracking) VALUES(?,?,?)`,[message.author.id,row[0].nbServerTracking,row[0].nbPlayerTracking-rows.length])
 						})
 					}
 				})
-				db.run(`DELETE FROM InformationPlayer WHERE ip=? AND port=? AND channelid=? AND guildid=?`,[args[0].split(':')[0],args[0].split(':')[1],message.channel.id,message.guild.id],(err)=>{return})
+				db.run(`DELETE FROM TrackedPlayers WHERE ip=? AND port=? AND channelid=? AND guildid=?`,[args[0].split(':')[0],args[0].split(':')[1],message.channel.id,message.guild.id],(err)=>{return})
 				db.close()
 				return
 			}
 			let db = new sqlite3.Database(baselocation)
-			db.all(`SELECT * FROM InformationPlayer WHERE name=? AND channelid=? AND guildid=?`,[args[0],message.channel.id,message.guild.id],(err,rows)=>{
+			db.all(`SELECT * FROM Users WHERE name=? AND channelid=? AND guildid=?`,[args[0],message.channel.id,message.guild.id],(err,rows)=>{
 				if(rows!=undefined && rows.length>0){
-					db.all(`SELECT * FROM InformationUsers WHERE authorid=?`,[message.author.id],(err,row)=>{
-						db.run(`REPLACE INTO InformationUsers(authorid,nbserverTracking,nbPlayerTracking) VALUES(?,?,?)`,[message.author.id,row[0].nbServerTracking,row[0].nbPlayerTracking-rows.length])
+					db.all(`SELECT * FROM Users WHERE authorid=?`,[message.author.id],(err,row)=>{
+						db.run(`REPLACE INTO Users(authorid,nbserverTracking,nbPlayerTracking) VALUES(?,?,?)`,[message.author.id,row[0].nbServerTracking,row[0].nbPlayerTracking-rows.length])
 					})
 				}
 			})
-			db.run(`DELETE FROM InformationPlayer WHERE name=? AND channelid=? AND guildid=?`,[args[0],message.channel.id,message.guild.id],(err)=>{console.log})
+			db.run(`DELETE FROM TrackedPlayers WHERE name=? AND channelid=? AND guildid=?`,[args[0],message.channel.id,message.guild.id],(err)=>{console.log})
 			db.close()
 			return
 		}
 		let db = new sqlite3.Database(baselocation)
-		db.all(`SELECT * FROM InformationPlayer WHERE channelid=? AND guildid=?`,[message.channel.id,message.guild.id],(err,rows)=>{
+		db.all(`SELECT * FROM TrackedPlayers WHERE channelid=? AND guildid=?`,[message.channel.id,message.guild.id],(err,rows)=>{
 			if(rows!=undefined && rows.length>0){
-				db.all(`SELECT * FROM InformationUsers WHERE authorid=?`,[message.author.id],(err,row)=>{
-					db.run(`REPLACE INTO InformationUsers(authorid,nbserverTracking,nbPlayerTracking) VALUES(?,?,?)`,[message.author.id,row[0].nbServerTracking,row[0].nbPlayerTracking-rows.length])
+				db.all(`SELECT * FROM Users WHERE authorid=?`,[message.author.id],(err,row)=>{
+					db.run(`REPLACE INTO Users(authorid,nbserverTracking,nbPlayerTracking) VALUES(?,?,?)`,[message.author.id,row[0].nbServerTracking,row[0].nbPlayerTracking-rows.length])
 				})
 			}
 		})
-		db.run(`DELETE FROM InformationPlayer WHERE channelid=? AND guildid=?`,[message.channel.id,message.guild.id],(err)=>{return})
+		db.run(`DELETE FROM TrackedPlayers WHERE channelid=? AND guildid=?`,[message.channel.id,message.guild.id],(err)=>{return})
 		db.close()
 	},
 };

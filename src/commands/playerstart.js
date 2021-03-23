@@ -11,7 +11,7 @@ module.exports = {
 	async execute(message, args, client, baselocation, command) {
 		message.delete({timeout:10}).catch(err=>{return})
 		let db = new sqlite3.Database(baselocation)
-		await db.all(`SELECT * FROM InformationUsers WHERE authorid=?`,message.author.id,(err,rows)=>{
+		await db.all(`SELECT * FROM Users WHERE authorid=?`,message.author.id,(err,rows)=>{
 			if(rows!=undefined && rows.length>0){
 				if(rows[0].nbPlayerTracking>=30){
 					message.channel.send("You already track 30 players").then(msg=>{msg.delete({timeout:3500})}).catch(err=>{return})
@@ -29,9 +29,9 @@ module.exports = {
 					message.channel.send("IP must be at the format x.x.x.x:p, like 170.21.1.247:27016").then(msg=>{msg.delete({timeout:5000})}).catch(err=>{return})
 					return
 				}
-				db.run(`REPLACE INTO InformationUsers(authorid,nbServerTracking,nbPlayerTracking) VALUES(?,?,?)`,[message.author.id,rows[0].nbPlayerTracking+args.length-1,0])
+				db.run(`REPLACE INTO Users(authorid,nbServerTracking,nbPlayerTracking) VALUES(?,?,?)`,[message.author.id,rows[0].nbPlayerTracking+args.length-1,0])
 				for(let i=1;i<args.length;i++){
-					db.run(`INSERT INTO InformationPlayer(guildid,channelid,name,ip,port) VALUES(?,?,?,?,?)`,[message.guild.id,message.channel.id,args[i],args[0].split(':')[0],args[0].split(":")[1]],(err)=>{
+					db.run(`INSERT INTO TrackedPlayers(guildid,channelid,name,ip,port) VALUES(?,?,?,?,?)`,[message.guild.id,message.channel.id,args[i],args[0].split(':')[0],args[0].split(":")[1]],(err)=>{
 						if(err!=undefined){
 							if(err.errno==19){
 								message.channel.send(`The player ${args[i]} is already tracked on this Discord server with this ARK server`).then(msg=>{msg.delete({timeout:5000})}).catch(err=>{return})
@@ -50,9 +50,9 @@ module.exports = {
 						message.channel.send("IP must be at the format x.x.x.x:p, like 170.21.1.247:27016").then(msg=>{msg.delete({timeout:5000})}).catch(err=>{return})
 						return
 					}
-					db.run(`REPLACE INTO InformationUsers(authorid,nbServerTracking,nbPlayerTracking) VALUES(?,?,?)`,[message.author.id,rows[0].nbPlayerTracking+args.length-1,0])
+					db.run(`REPLACE INTO Users(authorid,nbServerTracking,nbPlayerTracking) VALUES(?,?,?)`,[message.author.id,rows[0].nbPlayerTracking+args.length-1,0])
 					for(let i=1;i<args.length;i++){
-						db.run(`INSERT INTO InformationPlayer(guildid,channelid,name,ip,port) VALUES(?,?,?,?,?)`,[message.guild.id,message.channel.id,args[i],args[0].split(':')[0],args[0].split(":")[1]],(err)=>{
+						db.run(`INSERT INTO TrackedPlayers(guildid,channelid,name,ip,port) VALUES(?,?,?,?,?)`,[message.guild.id,message.channel.id,args[i],args[0].split(':')[0],args[0].split(":")[1]],(err)=>{
 							if(err!=undefined){
 								if(err.errno==19){
 									message.channel.send(`The player ${args[i]} is already tracked on this Discord server with this ARK server`).then(msg=>{msg.delete({timeout:5000})}).catch(err=>{return})
