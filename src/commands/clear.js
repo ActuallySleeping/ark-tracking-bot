@@ -3,7 +3,7 @@ const config = require(`${__dirname}/../config.json`)
 module.exports = {
 	name: 'clear',
 	guildOnly: true,
-	cooldown: 10,
+	cooldown: 120,
 	permissions: 'MANAGE_MESSAGES',
 	aliases: ['c'],
 	execute(message, args, client, db) {

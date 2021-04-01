@@ -51,10 +51,8 @@ const createFields = container => {
 	@return title String, title which is going to be used in the embed
 */
 const generateEmbed = async (client,ips,ports,db) => {
-	console.log(client,ips,ports,db)
 	let container = [];
 	for (let i in ports){
-		console.log(i)
 		await db.all(`SELECT * FROM Servers WHERE ip=? AND port=?`,[ips[i],ports[i]], async (err,row)=>{
 			if(row!=undefined && row.length>0){
 				await container.push({
@@ -100,7 +98,6 @@ const generateEmbed = async (client,ips,ports,db) => {
 			
 		}).catch(err=>{return})
 	}
-	console.log(container)
 	return {embed:{
 		color: 15105570,
 		author: {name : client.username ,icon_url: client.user.avatarURL},

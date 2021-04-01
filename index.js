@@ -80,7 +80,7 @@ client.on('message', async (message) => {
 			return 
 		}
 		
-		command.execute(message, args, client, db)
+		command.execute(message, args.filter(n=>{return n!==''}), client, db)
 	} catch (err) {
 		return
 	}
