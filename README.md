@@ -24,10 +24,9 @@ Clear an amount of message, the default amount is 100
 - [x] Understand the basic of GitHub, Markdown, JavaScript  
 
 #### Server tracking
-- [ ] Start tracking a server  
-- [ ] Keep the server, message id of a tracked server  
+- [x] Start tracking a server  
+- [x] Keep the server, message id of a tracked server  
 - [ ] Stop tracking a server  
-- [ ] Add and remove a tracked server in a message  
 
 #### Optional
 ##### Make a source server query
@@ -47,19 +46,12 @@ Clear an amount of message, the default amount is 100
 ┣ 📂src/  
 ┃  ┣ 📂commands/  
 ┃  ┃  ┣ 📜clear.js  
-┃  ┃  ┣ 📜defaultcluster.js  
 ┃  ┃  ┣ 📜help.js  
-┃  ┃  ┣ 📜playerstart.js  (player)  
-┃  ┃  ┣ 📜playerstop.js   (player)  
-┃  ┃  ┣ 📜reload.js  
-┃  ┃  ┣ 📜serveradd.js    (server)  
-┃  ┃  ┣ 📜serverremove.js (server)  
-┃  ┃  ┣ 📜serverstart.js  (server)  
-┃  ┃  ┗ 📜serverstop.js   (server)  
+┃  ┃  ┣ 📜serverstart.js 
+┃  ┃  ┗ 📜serverstop.js
 ┃  ┣ 📂tools/  
 ┃  ┃  ┣ 📜embedGenerator.js 
-┃  ┃  ┣ 📜generateTracked.js  
-┃  ┃  ┗ 📜removeVersion.js
+┃  ┃  ┗ 📜toolbox.js
 ┃  ┗⚙️config.json
 ┣ ⚙️.gitignore  
 ┣ 📜index.js  
@@ -70,11 +62,4 @@ Clear an amount of message, the default amount is 100
 📦 
 ┣ 🗄️base.bd  
 ┗ ⚙️token.json  
-```
-### What are the tables inside the database  
-**InformationMessage**  
-Keep the information about the Message that are used to track a server, and which server is going to be tracked.  
-**InformationPlayer**  
-Keep the information about who's being track in which channel in which discord and on what server.  
-**InformationServer**  
-Keep the information about the name, map, game of a server, in case the server is currently offline/timeout.  
+``` 
