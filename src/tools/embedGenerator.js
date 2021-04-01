@@ -1,7 +1,7 @@
 const sqlite3 = require('sqlite3').verbose();
 const query = require("source-server-query");
 
-const rv = require(`${__dirname}/removeVersion.js`)
+const { removeVersion } = require(`${__dirname}/toolbox.js`)
 const config = require(`${__dirname}/../config.json`)
 
 const separator = config.separator
@@ -22,23 +22,26 @@ function timesetter(time){
 /*Generate the fields of each server with the player online
 	@param embedMessage String, buffer containing the result of the query to the different ip:port
 	@param nbServ Int, set as the value of the number of server that the query performed
-	@return field 2DArray, contain a name for the name before a field as well as the value of the field for each server
+	@return 2DArray, contain a name for the name before a field as well as the value of the field for each server
 */
-function createFields(embedMessage){
-	let splitmessage = embedMessage.split(separator)
+const createFields = container => {
 	let field = []
-	for(let i=0;i<(splitmessage.length-1)/5;i++){
-		let  j=0, supersplitmessage = splitmessage[i*5+4].split("\n")
-		while(j<supersplitmessage.length-1){
+	for(let i = 0; i < container.length; i++){
+		let  j=0, splitcontainer = container[i].players.split("\n")
+
+		while(j<splitcontainer.length-1){
 			let buffer=""
-			while(buffer.length < 800 && !(j==supersplitmessage.length)){
-				buffer += supersplitmessage[j]+"\n"
+
+			while(buffer.length < 800 && !(j==splitcontainer.length)){
+				buffer += splitcontainer[j]+"\n"
 				j++
 			}
+
 			field.push({
-			name:splitmessage[i*5]+" - "+splitmessage[i*5+1]+splitmessage[i*5+2],
+			name:container[i].map + ' - ' + container[i].name,
 			value:"```ini\n\n"+buffer+"```"})
 		}
+
 	}
 	return field
 }
@@ -47,106 +50,82 @@ function createFields(embedMessage){
 	@param title String, the current title can be predefined or can the default (default is "Player List")
 	@return title String, title which is going to be used in the embed
 */
-function checkGame(embedMessage){
-	let title="Player List"
-	let splitmessage = embedMessage.split(separator)
-
-	let game = []
-	for(let i=0;i<((splitmessage.length-1)/5);i++){
-		game.push(splitmessage[(i*5)+3])
-	}
-	let j=0
-	for(let i=0;i<((splitmessage.length-1)/5)-1;i++){
-		if(game[i]===game[i+1]){j++}
-	}
-	if(j==((splitmessage.length-1)/5)-1){title=game[0]+" - Player List"}
-	
-	return title
-}
-
-const generateEmbed = async (client,ips,ports) =>{
-	let embedMessage =""
+const generateEmbed = async (client,ips,ports,db) => {
+	console.log(client,ips,ports,db)
+	let container = [];
 	for (let i in ports){
-
-		await query.info(ips[i],ports[i],1000).then(info=>{
-			let db = new sqlite3.Database(baselocation)
-			if(info.map==null && info.game==null){
-				db.all(`SELECT * FROM SavedServers WHERE ip=? AND port=?`,[ips[i],ports[i]], (err,rows)=>{
-					if(rows.length>0){
-						embedMessage += rows[0].map + separator + rows[0].name       + separator +" - Not Responding" + separator + rows[0].game + separator
-					}
-					else{
-						embedMessage += "Map unknow"+ separator + ips[i]+":"+ports[i]+ separator +" - Not Responding" + separator + "No games"   + separator
-					}
-				})	
+		console.log(i)
+		await db.all(`SELECT * FROM Servers WHERE ip=? AND port=?`,[ips[i],ports[i]], async (err,row)=>{
+			if(row!=undefined && row.length>0){
+				await container.push({
+					map     : row[0].map,
+					name    : row[0].name,
+					game    : row[0].game,
+					players : ""
+				});
 			}
 			else{
-				db.run(`REPLACE INTO SavedServers (ip,port,name,map,game) VALUES (?,?,?,?,?)`,[ips[i],ports[i],rv.removeVersion(info.name),info.map,info.game])
-				embedMessage += info.map + separator + rv.removeVersion(info.name) + separator+ "" + separator + info.game + separator
+				await query.info(ips[i],ports[i],250).then(async info=>{
+					if(info.map==null && info.game==null){
+						await container.push({
+							map     : "Map unknow",
+							name    : ips[i]+":"+ports[i]+" - Not Responding",
+							game    : "No games",
+							players : ""
+						});				
+					}
+					else{
+						db.run(`REPLACE INTO Servers (ip,port,name,map,game) VALUES (?,?,?,?,?)`,[ips[i],ports[i],removeVersion(info.name),info.map,info.game])
+						await container.push({
+							map     : info.map,
+							name    : removeVersion(info.name),
+							game    : info.game,
+							players : ""
+						});
+					}
+				}).catch(err=>{return})
 			}
-		}).catch(console.log)
+		});	
+		await query.players(ips[i],ports[i],750).then(players=>{
+			let count=0;
 
-		await query.players(ips[i],ports[i],5000).then(players=>{
-			const j=players.length; let l=0
+			if(players.length==undefined){container[i].players = " Not Responding or Timed Out\n"; return}
 
-			if(j==undefined){embedMessage += " Not Responding or Timed Out\n"}
-			else if(j==0){embedMessage += " No Players\n"}
-			else{for (let i=0;i<j;i++){
-					const u = players.pop()
-					if(!(u.name=='')){embedMessage += " ["+timesetter(u.duration)+"] "+u.name+"\n"}
-					else{l++}
-				}
-				if(l==j && l!=0){embedMessage += " No Players\n"}
-			}embedMessage+=separator
-		}).catch(console.log)
+			for (let player of players){
+				if(player.name==''){count++}
+				else{container[i].players += " ["+timesetter(player.duration)+"] "+player.name+"\n"}
+			}
 
+		    if(players.length==0 || count==0){container[i].players = " No Players\n"}
+			
+		}).catch(err=>{return})
 	}
+	console.log(container)
 	return {embed:{
 		color: 15105570,
 		author: {name : client.username ,icon_url: client.user.avatarURL},
-		title: checkGame(embedMessage),
+		title: "Ark Player List",
 		footer: {text: "Made by Leo#4265 with source-server-query"},
 		timestamp: Date.now(),
-		fields: createFields(embedMessage)
+		fields: createFields(container)
 	}}
 }
 
 /*
 */
-async function generateMessage(timer,client,msg,channel,messageid){
-	let db = new sqlite3.Database(baselocation)
-	await db.all(`SELECT * FROM TrackedServers WHERE messageid=? and channelid=?`,[messageid,channel.id], (err,rows)=>{
-		if(rows.length>0 && rows.length!=undefined){
-			channel.messages.fetch(messageid)
-			  .catch(err =>{return})
-			  .then(async (msg) =>{
-				if(!(msg==undefined || msg.deleted==true)){
-			    	let ips=rows[0].ips.split("#")
-					let ports=rows[0].ports.split("#").map(Number)
-					msg.edit(" ‎",await generateEmbed(client,ips,ports)).catch(err=>{return})
-			  	}
-			  	else{
-					channel.send("‎The message logged as been deleted, a new one will be generated")
-					  .catch(err=>{return})
-					  .then(async msg2 => {
-					  	clearInterval(timer);
-						db.run(`UPDATE TrackedServers SET messageid=? WHERE messageid=?`,[msg2.id,messageid])
-						let newtimer = setInterval(function() {
-							generateMessage(newtimer,client,msg2,channel,msg2.id)
-						}, 3000)
-					})
-				}
+async function generateMessage(client,db,channel,messageid,ips,ports){
+	channel.messages.fetch(messageid)
+	  .catch(err =>{return})
+	  .then(async (msg) =>{
+		if(!(msg==undefined || msg.deleted==true)){
+			msg.edit(" ‎",await generateEmbed(client,ips,ports,db)).catch(err=>{return})
+	  	}
+	  	else{
+			channel.send("‎The message logged as been deleted, a new one will be generated")
+			  .catch(err=>{return})
+			  .then(async msg => {
+				db.run(`UPDATE TrackedServers SET messageid=? WHERE messageid=?`,[msg.id,messageid])
 			})
-			  .catch(err=>{return})
-		}
-		else{
-			channel.messages.fetch(messageid)
-			  .catch(err=>{return})
-			  .then(msg =>{
-			  	msg.delete().catch(err=>{return})
-			  })
-			  .catch(err=>{return})
-			clearInterval(timer);
 		}
 	})
 }

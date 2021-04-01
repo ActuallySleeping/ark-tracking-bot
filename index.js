@@ -2,44 +2,41 @@ const fs = require('fs');
 const Discord = require('discord.js')
 const sqlite3 = require('sqlite3').verbose();
 
-const servertools = require(`${__dirname}/src/tools/embedGenerator.js`)
-const playertools = require(`${__dirname}/src/tools/generateTracked.js`)
+const { generateMessage }  = require(`${__dirname}/src/tools/embedGenerator.js`)
 const config = require(`${__dirname}/src/config.json`)
 const baselocation = `${__dirname}/../base.db`
 
 const client = new Discord.Client();
 client.commands = new Discord.Collection();
 client.cooldowns = new Discord.Collection();
-
-client.login(require(`${__dirname}/../token.json`))
+let db = new sqlite3.Database(baselocation)
 
 const commandFiles = fs.readdirSync(`${__dirname}/src/commands`).filter(file => file.endsWith('.js'));
 for (const file of commandFiles) {
 	const command = require(`${__dirname}/src/commands/${file}`);
 	client.commands.set(command.name, command);
 }
+client.login(require(`${__dirname}/../token.json`))
+
+
 
 client.once('ready' , async () => {
 	console.log("Ready to go!")
 
 	client.user.setActivity('🔧 maintenance', { type: 'PLAYING' })
 	  .catch(err=>{return});
-
-	let db = new sqlite3.Database(baselocation)
-	db.each(`SELECT * FROM TrackedServers`,[], (err,row) =>{
-		const channel = client.guilds.cache.get(row.guildid).channels.cache.get(row.channelid)
-		let timer = setInterval(function() {
-			servertools.generateMessage(timer,client,undefined,channel,row.messageid)
-		}, 10000)
-	})	
-	db.each(`SELECT * FROM TrackedPlayers`,[],(err,row) =>{
-		let timer = setInterval(function(){
-			playertools.generateTracked(timer,client,row.guildid,row.channelid)
-		}, 10000)
-	})
-	db.close()
+	
+	let timer = setInterval(function() {
+		db.all(`SELECT * FROM Tracked`,[], async (err,rows) =>{
+			if(rows!=undefined && rows.length>0){
+				for await (let row of rows){
+					const channel = client.guilds.cache.get(row.guildid).channels.cache.get(row.channelid)
+					generateMessage(client,db,channel,row.messageid,row.ips.split("#"),row.ports.split("#").map(Number))
+				}
+			}
+		})	
+	}, 60000)
 })
-
 client.on('message', async (message) => {
 	if(!(message.content.startsWith("&"))){return}
 	let commandName = message.content.substr(1).split(" ")[0].toLowerCase()
@@ -83,7 +80,7 @@ client.on('message', async (message) => {
 			return 
 		}
 		
-		command.execute(message, args, client, baselocation, command)
+		command.execute(message, args, client, db)
 	} catch (err) {
 		return
 	}

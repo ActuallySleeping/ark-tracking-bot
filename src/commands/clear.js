@@ -6,7 +6,7 @@ module.exports = {
 	cooldown: 10,
 	permissions: 'MANAGE_MESSAGES',
 	aliases: ['c'],
-	execute(message, args, client, baselocation, command) {
+	execute(message, args, client, db) {
 		message.delete({timeout:10}).catch(err=>{return})
 		let j=0,amountleft=args[0]
 		if(args[0]==0 || args[0]==undefined){amountleft=100}
@@ -17,6 +17,7 @@ module.exports = {
 		
 		message.channel.bulkDelete(amountleft)
 		message.channel.send("Clear Request Performed")
-		  .then(msg => {msg.delete({timeout:2500})})
+		  .then(msg => {msg.delete({timeout:2500}).catch(err=>{return})})
+		  .catch(err=>{return})
 	},
 };
