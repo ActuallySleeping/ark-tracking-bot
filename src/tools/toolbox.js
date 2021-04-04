@@ -13,16 +13,7 @@ const removeVersion = message => {
 
 const checkIp = element => {
 	if(element==undefined){return false}
-	return !(
-		element.split(':').length==2 
-		&& 0<element.split(':')[0].length && 0<element.split(':')[1].length 
-		&& element.split(':')[0].split('.').length==4 
-		&& !isNaN(element.split(':')[1]) && parseInt(element.split(':')[1]) <= 65535 
-		&& !isNaN(element.split(':')[0].split('.')[0]) && parseInt(element.split(':')[0].split('.')[0]) <= 255 
-		&& !isNaN(element.split(':')[0].split('.')[1]) && parseInt(element.split(':')[0].split('.')[1]) <= 255 
-		&& !isNaN(element.split(':')[0].split('.')[2]) && parseInt(element.split(':')[0].split('.')[2]) <= 255 
-		&& !isNaN(element.split(':')[0].split('.')[3]) && parseInt(element.split(':')[0].split('.')[3]) <= 255 
-	)
+	return ! /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?):(6553[0-5]|655[0-2][0-9]|65[0-4][0-9][0-9]|6[0-4][0-9][0-9][0-9][0-9]|[1-5](\d){4}|[1-9](\d){0,3})$/.test(element)
 }
 
 module.exports = { removeVersion, checkIp }

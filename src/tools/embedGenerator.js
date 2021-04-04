@@ -121,7 +121,7 @@ async function generateMessage(client,db,channel,messageid,ips,ports){
 			channel.send("‎The message logged as been deleted, a new one will be generated")
 			  .catch(err=>{return})
 			  .then(async msg => {
-				db.run(`UPDATE TrackedServers SET messageid=? WHERE messageid=?`,[msg.id,messageid])
+				db.run(`UPDATE Tracked SET messageid=? WHERE messageid=?`,[msg.id,messageid])
 			})
 		}
 	})

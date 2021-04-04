@@ -15,7 +15,6 @@ module.exports = {
 		message.delete({timeout:10}).catch(err=>{return})
 
 		db.all(`SELECT * FROM Users WHERE id=?`, [message.author.id] , async (err,row) => {
-			console.log(args)
 			if(args.length>=20 || row!=undefined && row.length+args.length>=20){
 				message.channel.send("You will follow too many servers (limit is 20)!").then(msg=>{msg.delete({timeout:3500})}).catch(err=>{return})
 				return
@@ -34,15 +33,16 @@ module.exports = {
 			port += args[args.length-1].split(":")[1]
 
 			if(row != undefined){
-				db.run(`REPLACE INTO Users(id,servers) VALUES(?,?)`,[message.author.id,row[0].servers+args.length])
+				db.run(`REPLACE INTO Users(id,servers) VALUES(?,?)`,[message.author.id,row[0].servers+args.length],err=>{return})
 			} else{
-				db.run(`REPLACE INTO Users(id,servers) VALUES(?,?)`,[message.author.id,args.length])
+				db.run(`REPLACE INTO Users(id,servers) VALUES(?,?)`,[message.author.id,args.length],err=>{return})
 			}
 
 			message.channel.send(" ‎",await generateEmbed(client,ip.split('#'),port.split('#').map(Number),db))
 			  .catch(err=>{return})
 			  .then(msg => {
-				db.run(`INSERT INTO Tracked (guildid,channelid,messageid,ips,ports) VALUES(?,?,?,?,?)`,[msg.guild.id,msg.channel.id,msg.id,ip,port])
+				db.run(`INSERT INTO Tracked (guildid,channelid,messageid,ips,ports,authorid) VALUES(?,?,?,?,?,?)`,
+					[msg.guild.id,msg.channel.id,msg.id,ip,port,message.author.id],err=>{return})
 			})
 		})
 	},

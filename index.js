@@ -30,12 +30,17 @@ client.once('ready' , async () => {
 		db.all(`SELECT * FROM Tracked`,[], async (err,rows) =>{
 			if(rows!=undefined && rows.length>0){
 				for await (let row of rows){
-					const channel = client.guilds.cache.get(row.guildid).channels.cache.get(row.channelid)
-					generateMessage(client,db,channel,row.messageid,row.ips.split("#"),row.ports.split("#").map(Number))
+					if(row.guildid!=undefined){
+						const channel = client.guilds.cache.get(row.guildid).channels.cache.get(row.channelid)
+						generateMessage(client,db,channel,row.messageid,row.ips.split("#"),row.ports.split("#").map(Number))
+					} else{
+						const channel = client.channels.cache.get(row.channelid)
+						generateMessage(client,db,channel,row.messageid,row.ips.split("#"),row.ports.split("#").map(Number))
+					}
 				}
 			}
 		})	
-	}, 60000)
+	}, 5000)
 })
 client.on('message', async (message) => {
 	if(!(message.content.startsWith("&"))){return}
@@ -68,6 +73,7 @@ client.on('message', async (message) => {
 			message.channel.send('This command cannot be used inside DMs').then(msg=>{msg.delete({timeout:2500})})
 			return
 		}
+
 		if (command.permissions) {
 		 	const authorPerms = message.channel.permissionsFor(message.author);
 		 	if (!authorPerms || !authorPerms.has(command.permissions)) {
@@ -75,11 +81,12 @@ client.on('message', async (message) => {
 		 		return
 		 	}
 		}
+
 		if(command.args && !args.length){
 			message.channel.send('You need to provide one/or more argument(s)').then(msg=>{msg.delete({timeout:5000})})
 			return 
 		}
-		
+
 		command.execute(message, args.filter(n=>{return n!==''}), client, db)
 	} catch (err) {
 		return
