@@ -15,7 +15,7 @@ module.exports = {
 		message.delete({timeout:10}).catch(err=>{return})
 
 		db.all(`SELECT * FROM Users WHERE id=?`, [message.author.id] , async (err,row) => {
-			if(args.length>=20 || row!=undefined && row.length+args.length>=20){
+			if(args.length>=20 || row!=undefined && row[0].servers+args.length>=20){
 				message.channel.send("You will follow too many servers (limit is 20)!").then(msg=>{msg.delete({timeout:3500})}).catch(err=>{return})
 				return
 			}
