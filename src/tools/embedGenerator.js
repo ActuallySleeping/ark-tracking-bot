@@ -5,7 +5,6 @@ const { removeVersion } = require(`${__dirname}/toolbox.js`)
 const config = require(`${__dirname}/../config.json`)
 
 const separator = config.separator
-const baselocation = `${__dirname}/../../../base.db`
 
 
 /*Change the display of the time 
@@ -52,39 +51,52 @@ const createFields = container => {
 */
 const generateEmbed = async (client,ips,ports,db) => {
 	let container = [];
+
 	for (let i in ports){
-		await db.all(`SELECT * FROM Servers WHERE ip=? AND port=?`,[ips[i],ports[i]], async (err,row)=>{
+
+		await db.get(`SELECT * FROM Servers WHERE ip=? AND port=?`,ips[i], ports[i], async (err,row)=>{
 			if(row!=undefined && row.length>0){
+
 				await container.push({
-					map     : row[0].map,
-					name    : row[0].name,
-					game    : row[0].game,
+					map     : row.map,
+					name    : row.name,
+					game    : row.game,
 					players : ""
 				});
+
 			}
 			else{
-				await query.info(ips[i],ports[i],250).then(async info=>{
+
+				await query.info(ips[i],ports[i],100).then(async info=>{
+					
 					if(info.map==null && info.game==null){
+
 						await container.push({
 							map     : "Map unknow",
 							name    : ips[i]+":"+ports[i]+" - Not Responding",
 							game    : "No games",
 							players : ""
-						});				
+						});	
+
 					}
 					else{
-						db.run(`REPLACE INTO Servers (ip,port,name,map,game) VALUES (?,?,?,?,?)`,[ips[i],ports[i],removeVersion(info.name),info.map,info.game])
+
+						const _ = removeVersion(info.name)
+						db.run(`INSERT OR REPLACE INTO Servers (ip,port,name,map,game) VALUES (?,?,?,?,?)`,
+							ips[i], ports[i], _, info.map, info.game)
+
 						await container.push({
 							map     : info.map,
-							name    : removeVersion(info.name),
+							name    : _,
 							game    : info.game,
 							players : ""
 						});
+						
 					}
 				}).catch(err=>{return})
 			}
 		});	
-		await query.players(ips[i],ports[i],750).then(players=>{
+		await query.players(ips[i],ports[i],500).then(players=>{
 			let count=0;
 
 			if(players.length==undefined){container[i].players = " Not Responding or Timed Out\n"; return}
@@ -100,7 +112,6 @@ const generateEmbed = async (client,ips,ports,db) => {
 	}
 	return {embed:{
 		color: 15105570,
-		author: {name : client.username ,icon_url: client.user.avatarURL},
 		title: "Ark Player List",
 		footer: {text: "Made by Leo#4265 with source-server-query"},
 		timestamp: Date.now(),

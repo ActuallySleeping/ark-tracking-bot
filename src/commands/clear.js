@@ -7,17 +7,29 @@ module.exports = {
 	permissions: 'MANAGE_MESSAGES',
 	aliases: ['c'],
 	execute(message, args, client, db) {
-		message.delete({timeout:10}).catch(err=>{return})
-		let j=0,amountleft=args[0]
-		if(args[0]==0 || args[0]==undefined){amountleft=100}
-		if(args[0]>100){
-			for(let i=0;i<Math.floor(args[0]/100);i++){message.channel.bulkDelete(100)}
-			amountleft=args[0]-(Math.floor(args[0]/100)*100)
+		message.delete().catch(err=>{return})
+
+		if( args[0].length && args[0]==0){
+			return;
 		}
-		
-		message.channel.bulkDelete(amountleft)
+
+		if(!message.guild.me.hasPermission('MANAGE_MESSAGES')){
+			message.channel.send('I cant delete messages, I\'m missing the permission: Manage messages.')
+			return;
+		}
+
+		const _ = ( args[0] && args[0].length ? Math.floor((args[0]-1)/100) : 1);
+
+		for (let i=0; i<_; i++){
+			message.channel.bulkDelete(100).catch(err=>{return});
+		}
+
+		message.channel.bulkDelete( 
+			args[0] && args[0].length ? args[0] - _ * 100 : 100).catch(err=>{return});
+
 		message.channel.send("Clear Request Performed")
-		  .then(msg => {msg.delete({timeout:2500}).catch(err=>{return})})
-		  .catch(err=>{return})
+		  .catch(e=>{return})
+		  .then(msg => {msg.delete({timeout:2500})
+		  				.catch(err=>{return});});
 	},
 };

@@ -3,73 +3,49 @@ const config = require(`${__dirname}/../config.json`)
 
 module.exports = {
 	name: 'stop',
-	cooldown: 60,
+	cooldown: 1,
 	permissions: ['MANAGE_MESSAGES','MANAGE_SERVER'],
 	aliases: ['so'],
 	async execute(message, args, client, db) {
 		message.delete({timeout:10}).catch(err=>{return})
 
-		if(args.length>0){
-			db.all(`SELECT * FROM Tracked WHERE messageid=? AND channelid=? AND guildid=?`,
-			  [args[0],message.channel.id,message.guild.id],async (err,rows)=>{
+        db.all(`SELECT * FROM Tracked WHERE guildid=? AND channelid=?`,
+          [message.guild.id,message.channel.id],async (err,rows)=>{
 
-			  	if(rows!=undefined && rows.length>0){
-					await db.all(`SELECT * FROM Users WHERE id=?`,
-						[rows[0].authorid],(err,row)=>{
-						if(row!=undefined && row.length>0){
-							db.run(`REPLACE INTO Users(id,servers) VALUES(?,?)`,
-							  [rows[0].authorid,row[0].servers-rows[0].ips.split('#').length])
-						} else{return}
+          	if(rows==undefined || rows.length==0){
 
-					})
-		  			message.channel.messages.fetch(rows[0].messageid)
-					  .catch(err=>{console.log})
+          		message.channel
+          		  .send(`You dont have any server traked in this channel`)
+          		   .then(m=>{m.delete({timeout:2500})
+          		    .catch(e=>{return;});
+          		   });
+          		return;
+          	}
+
+          	for await (let row of rows){
+
+	          	const _ = (args.length>0 ? args.findIndex(_ => _ === row.messageid) : 0);
+
+	          	if(_ != -1){
+
+		  			message.channel.messages
+		  			 .fetch(row.messageid)
+					  .catch(err=>{return})
 					  .then(msg => {
-					  	msg.delete({timeout:10}).catch(err=>{console.log})
-					  })
-					db.run(`DELETE FROM Tracked WHERE messageid=? AND channelid=? AND guildid=?`,
-					  [args[0],message.channel.id,message.guild.id])
-					
-				} else{
-					message.channel.send(`Found no message to delete`).then(msg=>{msg.delete({timeout:2500}).catch(err=>{return})})
-				}
-			})
-		} else{
-			db.all(`SELECT * FROM Tracked WHERE channelid=? AND guildid=?`,
-			  [message.channel.id,message.guild.id],async (err,rows)=>{
-			  	let store = []
-			  	if(rows!=undefined){
-			  		for await (let row of rows){
+					  	msg.delete({timeout:10})
+					  	 .catch(err=>{return});
+					  });
 
-			  			if(store.findIndex(element => element.authorid === row.authorid) != -1 ){
-			  				store[store.findIndex(element => element.authorid === row.authorid)].count += row.ips.split('#').length
-			  			} else{
-			  				store.push({
-			  					authorid : row.authorid,
-			  					count    : row.ips.split('#').length
-			  				})
-			  			}
-			  			message.channel.messages.fetch(row.messageid)
-						  .catch(err=>{return})
-						  .then(msg => {
-						  	msg.delete({timeout:10}).catch(err=>{return})
-						  })
-			  		}
-					db.run(`DELETE FROM Tracked WHERE channelid=? AND guildid=?`,
-			  		  [message.channel.id,message.guild.id])
-				} else{
-					message.channel.send(`Found no message to delete`).then(msg=>{msg.delete({timeout:2500}).catch(err=>{return})})
-				}
-				for await (let stock of store){
-					await db.all(`SELECT * FROM Users WHERE id=?`,
-						[stock.authorid],(err,row)=>{
-						if(row!=undefined && row.length>0){
-							db.run(`REPLACE INTO Users(id,servers) VALUES(?,?)`,
-							  [stock.authorid,row[0].servers-stock.count])
-						} else{return}
-					})
-				}
-			})
-		}
+		          	db.run(`DELETE FROM Tracked WHERE guildid=? AND channelid=? AND messageid=?`,
+		              row.guildid, row.channelid, row.messageid);
+
+		          	db.run(`UPDATE Users SET servers = (SELECT servers from Users WHERE id=?) - ? WHERE id=?`,
+          			  row.authorid, row.ips.split('#').length, row.authorid);
+
+		          	db.run(`UPDATE Guilds SET servers = (SELECT servers from Guilds WHERE id=?) - ? WHERE id=?`,
+          			  row.guildid, row.ips.split('#').length, row.guildid);
+	          	}
+          	}
+        })
 	},
 };
