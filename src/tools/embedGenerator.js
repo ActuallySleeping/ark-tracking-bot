@@ -44,98 +44,115 @@ const createFields = container => {
 	}
 	return field
 }
-/*Add the name of the game if all the server performed are from the same game and if the value is a default or a predefined
-	@param embedMessage String, buffer containing the result of the query to the different ip:port
-	@param title String, the current title can be predefined or can the default (default is "Player List")
-	@return title String, title which is going to be used in the embed
-*/
-const generateEmbed = async (client,ips,ports,db) => {
-	let container = [];
 
-	for (let i in ports){
+const generateEmbed = async (begin,client,msg,db,servers,ips,ports) => {
 
-		await db.get(`SELECT * FROM Servers WHERE ip=? AND port=?`,ips[i], ports[i], async (err,row)=>{
-			if(row!=undefined && row.length>0){
-
-				await container.push({
-					map     : row.map,
-					name    : row.name,
-					game    : row.game,
-					players : ""
-				});
-
+	const getPlayers = (servers,ip,port,i) => {
+		for (let server of servers){
+			if(server != undefined && server.ip == ip && server.port == port){
+				return server.players;
 			}
-			else{
-
-				await query.info(ips[i],ports[i],100).then(async info=>{
-					
-					if(info.map==null && info.game==null){
-
-						await container.push({
-							map     : "Map unknow",
-							name    : ips[i]+":"+ports[i]+" - Not Responding",
-							game    : "No games",
-							players : ""
-						});	
-
-					}
-					else{
-
-						const _ = removeVersion(info.name)
-						db.run(`INSERT OR REPLACE INTO Servers (ip,port,name,map,game) VALUES (?,?,?,?,?)`,
-							ips[i], ports[i], _, info.map, info.game)
-
-						await container.push({
-							map     : info.map,
-							name    : _,
-							game    : info.game,
-							players : ""
-						});
-						
-					}
-				}).catch(err=>{return})
-			}
-		});	
-		await query.players(ips[i],ports[i],500).then(players=>{
-			let count=0;
-
-			if(players.length==undefined){container[i].players = " Not Responding or Timed Out\n"; return}
-
-			for (let player of players){
-				if(player.name==''){count++}
-				else{container[i].players += " ["+timesetter(player.duration)+"] "+player.name+"\n"}
-			}
-
-		    if(players.length==0 || count==0){container[i].players = " No Players\n"}
-			
-		}).catch(err=>{return})
+		}
 	}
-	return {embed:{
-		color: 15105570,
-		title: "Ark Player List",
-		footer: {text: "Made by Leo#4265 with source-server-query"},
-		timestamp: Date.now(),
-		fields: createFields(container)
-	}}
+
+	let container = [];
+	const promise = (container,servers,ips,ports) => new Promise( async (resolve) => { 
+		setTimeout(() => resolve("done"), 500);
+
+
+		for await (let port of ports){
+			let ip = ips[ports.indexOf(port)]
+			db.get(`SELECT * FROM Servers WHERE ip=? AND port=?`,ip, port, async (err,row)=>{
+				if(row!=undefined){
+					//console.log("infoDB")
+					container.push({
+						map     : row.map,
+						name    : row.name,
+						game    : row.game,
+						players : getPlayers(servers,ip,port)
+					});
+
+					if(port == ports[ports.length-1]){
+						resolve("done")
+					}
+
+				}
+				else{
+					query.info(ips,ports,100).then(async info=>{
+						
+						if(info.map==null && info.game==null){
+							//console.log("infoNULL")
+
+							container.push({
+								map     : "Map unknow",
+								name    : ips[i]+":"+ports[i]+" - Not Responding",
+								game    : "No games",
+								players : getPlayers(servers,ips[i],ports[i])
+							});	
+
+							if(i+1 == ports.length){
+								resolve("done")
+							}
+						}
+						else{
+							//console.log("infoQUERY")
+
+							const _ = removeVersion(info.name)
+
+							container.push({
+								map     : info.map,
+								name    : _,
+								game    : info.game,
+								players : getPlayers(servers,ips[i],ports[i])
+							});
+
+							db.run(`INSERT OR REPLACE INTO Servers (ip,port,name,map,game) VALUES (?,?,?,?,?)`,
+								ips, ports, _, info.map, info.game)
+
+							if(i+1 == ports.length){
+								resolve("done")
+							}
+						}
+					}).catch(err=>{return})
+				}
+			});	
+		}
+		return
+	})
+
+	promise(container,servers,ips,ports).then(() => {
+		try {
+			msg.edit(" ‎",{embed:{
+				color: 15105570,
+				title: "Ark Player List",
+				footer: {text: "Made by Leo#4265 with source-server-query"},
+				timestamp: Date.now(),
+				fields: createFields(container)
+			}}).catch(err=>{return})
+			console.log("editMessage : " + Math.abs(Date.now() - begin))
+		} catch {
+			return;
+		}
+	})
+
 }
 
-/*
-*/
-async function generateMessage(client,db,channel,messageid,ips,ports){
+async function generateMessage(begin,client,db,channel,messageid,ips,ports,servers){
 	channel.messages.fetch(messageid)
 	  .catch(err =>{return})
 	  .then(async (msg) =>{
-		if(!(msg==undefined || msg.deleted==true)){
-			msg.edit(" ‎",await generateEmbed(client,ips,ports,db)).catch(err=>{return})
+		if(msg!=undefined && msg.deleted!=true){
+			await generateEmbed(begin,client,msg,db,servers,ips,ports)
 	  	}
 	  	else{
 			channel.send("‎The message logged as been deleted, a new one will be generated")
 			  .catch(err=>{return})
 			  .then(async msg => {
 				db.run(`UPDATE Tracked SET messageid=? WHERE messageid=?`,[msg.id,messageid])
+				console.log("newMessage : " + Math.abs(Date.now() - begin))
 			})
 		}
 	})
 }
 
-module.exports = { generateMessage, generateEmbed }
+module.exports = { generateMessage, generateEmbed, timesetter }

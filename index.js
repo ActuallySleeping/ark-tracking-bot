@@ -1,8 +1,9 @@
 const fs = require('fs');
 const Discord = require('discord.js')
 const sqlite3 = require('sqlite3').verbose();
+const query = require("source-server-query");
 
-const { generateMessage }  = require(`${__dirname}/src/tools/embedGenerator.js`)
+const { generateMessage,timesetter }  = require(`${__dirname}/src/tools/embedGenerator.js`)
 const config = require(`${__dirname}/src/config.json`)
 const baselocation = `${__dirname}/src/base.db`
 
@@ -27,22 +28,109 @@ client.once('ready' , async () => {
 	  .catch(err=>{return});
 	
 	let timer = setInterval(function() {
+	let begin = Date.now()
+
 		db.all(`SELECT * FROM Tracked`,[], (err,rows) =>{
 			if(rows!=undefined && rows.length>0){
-				for (let row of rows){
 
-					const channel = client.guilds.cache.get(row.guildid)
-									      .channels.cache.get(row.channelid);
-					generateMessage(
-						client,
-						db,
-						channel,
-						row.messageid,
-						row.ips.split("#"),
-						row.ports.split("#").map(Number)
-					)
+				let servers = [];
 
-				}
+				const updateInfos = rows => new Promise(async (resolve) => {
+					setTimeout(() => resolve("done"), 40000);
+
+					for await  (let row of rows){
+
+						const ips    = row.ips.split('#')
+						const ports  = row.ports.split('#')
+
+						for (let i in ips){
+
+							let check = false;
+
+							for await (let server of servers){
+								//console.log(row2.ip+" == "+ips[i]+" && "+row2.port+" == "+ports[i])
+								if(server.ip == ips[i] && server.port == ports[i]){
+									//console.log("found")
+									check = true
+								}
+							}
+
+							if(!check){
+								servers.push({
+									ip      : ips[i],
+									port    : parseInt(ports[i]),
+									players : ""
+								});
+							}
+						}
+
+					}
+
+					let i = 0;
+
+					for await (let server of servers){
+
+						query.players(server.ip,server.port,500).then( players =>{
+							let count=0;
+
+							if(players.length==undefined){
+								server.players = " Not Responding or Timed Out\n"; 
+								return;
+							}
+
+							for (let player of players){
+
+								if( player.name == '' ) {
+									count++;
+								}
+				
+								else {
+									server.players += " [" + 
+									timesetter(player.duration) + 
+									"] " +
+									player.name + 
+									"\n";
+								}
+							}
+
+
+
+						    if(players.length == 0 || count == players.length) { 
+						    	server.players = " No Players\n"; 
+						    }
+							
+							i++
+							if(i == servers.length){
+								resolve("done")
+							}
+						}).catch(err=>{return;})
+	
+					}
+				})
+				
+				updateInfos(rows).then(() => {
+
+					console.log("getPlayers : " + Math.abs(Date.now() - begin))
+					for (let server of servers){
+						console.log(server.ip+":"+server.port+"\n"+server.players)
+					}
+
+					for (let row of rows){
+						const channel = client.guilds.cache.get(row.guildid)
+					      .channels.cache.get(row.channelid);
+
+						generateMessage(
+							begin,
+							client,
+							db,
+							channel,
+							row.messageid,
+							row.ips.split('#'),
+							row.ports.split('#').map(Number),
+							servers
+						)
+					}
+				})
 			}
 		})	
 	}, 60 * 1000)
