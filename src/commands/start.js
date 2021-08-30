@@ -2,7 +2,7 @@ const sqlite3 = require('sqlite3').verbose();
 
 const config = require(`${__dirname}/../config.json`)
 const { checkIp } = require(`${__dirname}/../tools/toolbox.js`)
-const { generateEmbed } = require(`${__dirname}/../tools/embedGenerator.js`)
+const { createEmbed } = require(`${__dirname}/../tools/embedGenerator.js`)
 
 module.exports = {
 	name: 'start',
@@ -51,7 +51,7 @@ module.exports = {
 				count = (rowGuild ? rowGuild.servers : 0) + args.length;
 				db.run("INSERT OR REPLACE INTO Guilds(id, servers) VALUES(?, ?)", message.guild.id, count);
 
-				message.channel.send(" ‎",await generateEmbed(client,ips.split('#'),ports.split('#').map(Number),db))
+				message.channel.send(" ‎",await createEmbed(client,ips.split('#'),ports.split('#').map(Number),db))
 				  .catch(err=>{return})
 				  .then(msg => {
 					db.run(`INSERT INTO Tracked (guildid,channelid,messageid,ips,ports,authorid) VALUES(?,?,?,?,?,?)`,

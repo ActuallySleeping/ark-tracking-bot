@@ -24,7 +24,7 @@ client.login(require(`${__dirname}/src/token.json`))
 client.once('ready' , async () => {
 	console.log("Ready to go!")
 
-	client.user.setActivity('🔧 maintenance', { type: 'PLAYING' })
+	client.user.setActivity('🔧 Fixing bugs', { type: 'PLAYING' })
 	  .catch(err=>{return});
 	
 	let timer = setInterval(function() {
@@ -35,8 +35,8 @@ client.once('ready' , async () => {
 
 				let servers = [];
 
-				const updateInfos = rows => new Promise(async (resolve) => {
-					setTimeout(() => resolve("done"), 40000);
+				const updateInfos = rows => new Promise ( async (resolve) => {
+					setTimeout(() => resolve("done"), 40 * 1000);
 
 					for await  (let row of rows){
 
@@ -70,50 +70,53 @@ client.once('ready' , async () => {
 
 					for await (let server of servers){
 
-						query.players(server.ip,server.port,500).then( players =>{
-							let count=0;
+						const getPlayers = server => new Promise( async (resolve) => {
+							setTimeout(() => resolve("done"), 500);
+							query.players(server.ip,server.port,400).then( (players) =>{
+								let count=0;
 
-							if(players.length==undefined){
-								server.players = " Not Responding or Timed Out\n"; 
-								return;
-							}
-
-							for (let player of players){
-
-								if( player.name == '' ) {
-									count++;
+								if(players.length==undefined){
+									server.players = " Not Responding or Timed Out\n"; 
+									return;
 								}
-				
-								else {
-									server.players += " [" + 
-									timesetter(player.duration) + 
-									"] " +
-									player.name + 
-									"\n";
+
+								for (let player of players){
+
+									if( player.name == '' ) {
+										count++;
+									}
+					
+									else {
+										server.players += " [" + 
+										timesetter(player.duration) + 
+										"] " +
+										player.name + 
+										"\n";
+									}
 								}
-							}
 
 
 
-						    if(players.length == 0 || count == players.length) { 
-						    	server.players = " No Players\n"; 
-						    }
-							
-							i++
-							if(i == servers.length){
-								resolve("done")
-							}
-						}).catch(err=>{return;})
-	
+							    if(players.length == 0 || count == players.length) { 
+							    	server.players = " No Players\n"; 
+							    }
+
+								i++
+							}).catch(err=>{return;})
+
+						}) 
+						getPlayers(server).then(() => {
+							if(i == servers.length){ resolve("done"); }
+						})
 					}
 				})
 				
 				updateInfos(rows).then(() => {
 
 					console.log("getPlayers : " + Math.abs(Date.now() - begin))
-					for (let server of servers){
+					/*or (let server of servers){
 						console.log(server.ip+":"+server.port+"\n"+server.players)
-					}
+					}*/
 
 					for (let row of rows){
 						const channel = client.guilds.cache.get(row.guildid)

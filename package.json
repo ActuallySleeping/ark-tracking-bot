@@ -1,5 +1,6 @@
 {
 	"dependencies": {
+		"tar": ">=3.2.3",
 		"discord.js": "^12.5.1",
 		"source-server-query": "^1.0.1",
 		"sqlite3": "^5.0.2"
