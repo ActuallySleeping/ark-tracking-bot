@@ -151,35 +151,46 @@ const generateNames = (container,servers,ips,ports,db) => new Promise( async (re
 })
 
 
-const createEmbed = async (client,ips,ports,db) => {
+const createEmbed = (client,ips,ports,db) => new Promise ( (resolve) => {
 
 	let container = [];
 	let servers = [];
 
-	for (let i in ips){
+	const createServer = servers => new Promise ((resolve) => {
+		for (let i in ips){
 
-		let server = {
-			ip      : ips[i],
-			port    : ports[i],
-			players : ""
+				let server = {
+					ip      : ips[i],
+					port    : ports[i],
+					players : ""
+				}
+				getPlayers(server).then(() => {
+					servers.push(server);
+					resolve("done")
+				})
+			}
+	}) 
+
+	createServer(servers).then(() => {
+		for (let server of servers){
+
+			if(server.players == ''){
+				server.players = " Not Responding or Timed Out\n"; 
+			}
+			//console.log(server.ip+":"+server.port+"\n"+server.players)
 		}
-		servers.push(server)
-	}
-
-	getPlayers(servers).then(() => {
-		console.log(servers)
 
 		generateNames(container,servers,ips,ports,db).then(() => {
-		return {embed:{
-					color: 15105570,
-					title: "Ark Player List",
-					footer: {text: "Made by Leo#4265 with source-server-query"},
-					timestamp: Date.now(),
-					fields: createFields(container)
-				}}
+			resolve({embed:{
+						color: 15105570,
+						title: "Ark Player List",
+						footer: {text: "Made by Leo#4265 with source-server-query"},
+						timestamp: Date.now(),
+						fields: createFields(container)
+					}})
 		})
 	})
-}
+})
 
 const generateEmbed = async (begin,client,msg,db,servers,ips,ports) => {
 

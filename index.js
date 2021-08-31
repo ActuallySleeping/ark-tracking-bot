@@ -36,7 +36,7 @@ client.once('ready' , async () => {
 				let servers = [];
 
 				const updateInfos = rows => new Promise ( async (resolve) => {
-					setTimeout(() => resolve("done"), 10 * 1000);
+					setTimeout(() => resolve("done"), 40 * 1000);
 
 					for await  (let row of rows){
 
@@ -106,7 +106,7 @@ client.once('ready' , async () => {
 				})
 			}
 		})	
-	}, 15 * 1000)
+	}, 60 * 1000)
 })
 
 
