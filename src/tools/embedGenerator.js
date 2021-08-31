@@ -4,8 +4,6 @@ const query = require("source-server-query");
 const { removeVersion } = require(`${__dirname}/toolbox.js`)
 const config = require(`${__dirname}/../config.json`)
 
-const separator = config.separator
-
 
 /*Change the display of the time 
 	@param time Int, contain the time in seconds, to transform 
@@ -18,26 +16,25 @@ function timesetter(time){
 	else{return	Math.floor(time/(60*60*24))+"d "+Math.floor(time/(60*60)-(Math.floor(time/(60*60*24))*24))+"h "+Math.floor(time/60-(Math.floor(time/(60*60))*60))+"m"}
 }
 
-/*Generate the fields of each server with the player online
-	@param embedMessage String, buffer containing the result of the query to the different ip:port
-	@param nbServ Int, set as the value of the number of server that the query performed
-	@return 2DArray, contain a name for the name before a field as well as the value of the field for each server
+/*Generate the fields of each server with the players online on that server
+	@param servers Object, all the informations about the servers (name, game, players, ...)
+	@return 2DArray, array of Objects with the title and the content of each field
 */
-const createFields = container => {
+const createFields = servers => {
 	let field = []
-	for(let i = 0; i < container.length; i++){
-		let  j=0, splitcontainer = container[i].players.split("\n")
+	for(let server of servers){
+		let  i=0, splitcontainer = server.players.split("\n")
 
-		while(j<splitcontainer.length-1){
+		while(i<splitcontainer.length-1){
 			let buffer=""
 
-			while(buffer.length < 800 && !(j==splitcontainer.length)){
-				buffer += splitcontainer[j]+"\n"
-				j++
+			while(buffer.length < 800 && !(i==splitcontainer.length)){
+				buffer += splitcontainer[i]+"\n"
+				i++
 			}
 
 			field.push({
-			name:container[i].map + ' - ' + container[i].name,
+			name:server.map + ' - ' + server.name,
 			value:"```ini\n\n"+buffer+"```"})
 		}
 
@@ -89,6 +86,8 @@ const generateNames = (container,servers,ips,ports,db) => new Promise( async (re
 		}
 	}
 
+	let i = 0;
+
 	for await (let port of ports){
 		let ip = ips[ports.indexOf(port)]
 		db.get(`SELECT * FROM Servers WHERE ip=? AND port=?`,ip, port, async (err,row)=>{
@@ -103,7 +102,8 @@ const generateNames = (container,servers,ips,ports,db) => new Promise( async (re
 					players : selectPlayers(servers,ip,port)
 				});
 
-				if(port == ports[ports.length-1]){
+				i++
+				if(i == ports.length){
 					resolve("done")
 				}
 
@@ -121,7 +121,8 @@ const generateNames = (container,servers,ips,ports,db) => new Promise( async (re
 							players : selectPlayers(servers,ip,port)
 						});	
 
-						if(port == ports[ports.length-1]){
+						i++
+						if(i == ports.length){
 							resolve("done")
 						}
 					}
@@ -140,7 +141,8 @@ const generateNames = (container,servers,ips,ports,db) => new Promise( async (re
 						await db.run(`INSERT OR REPLACE INTO Servers (ip,port,name,map,game) VALUES (?,?,?,?,?)`,
 							ip, port, _, info.map, info.game)
 
-						if(port == ports[ports.length-1]){
+						i++
+						if(i == ports.length){
 							resolve("done")
 						}
 					}
@@ -148,17 +150,6 @@ const generateNames = (container,servers,ips,ports,db) => new Promise( async (re
 			}
 		});	
 	}
-})
-
-
-const createEmbed = (client,ips,ports,db) => new Promise ( (resolve) => {
-
-	let container = [];
-	let servers = [];
-
-
-
-	
 })
 
 const generateEmbed = (begin,client,db,servers,ips,ports) => new Promise ( (resolve) => {
@@ -230,4 +221,4 @@ async function generateMessage(begin,client,db,channel,messageid,ips,ports,serve
 	})
 }
 
-module.exports = { generateMessage, generateEmbed, timesetter, createEmbed, getPlayers }
+module.exports = { generateMessage, generateEmbed, timesetter, getPlayers }

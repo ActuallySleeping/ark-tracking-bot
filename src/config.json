@@ -1,3 +1,4 @@
 {
-	"separator":"@#>£"
+	"maintenance":["🔧 Fixing bugs", { "type": "PLAYING" }],
+	"normal":["🎥 ARK servers", { "type": "WATCHING" }]
 }

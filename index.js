@@ -24,8 +24,9 @@ client.login(require(`${__dirname}/src/token.json`))
 client.once('ready' , async () => {
 	console.log("Ready to go!")
 
-	client.user.setActivity('🔧 Fixing bugs', { type: 'PLAYING' })
-	  .catch(err=>{return});
+	let activity = config.maintenance
+	client.user.setActivity(activity[0],activity[1])
+	  .catch(err=>{console.log(err)});
 	
 	let timer = setInterval(function() {
 	let begin = Date.now()
