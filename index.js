@@ -29,7 +29,7 @@ client.once('ready' , async () => {
 	  .catch(err=>{console.log(err)});
 	
 	let timer = setInterval(function() {
-	let begin = Date.now()
+	let begin = Date.now();
 
 		db.all(`SELECT * FROM Tracked`,[], (err,rows) =>{
 			if(rows!=undefined && rows.length>0){
@@ -37,22 +37,20 @@ client.once('ready' , async () => {
 				let servers = [];
 
 				const updateInfos = rows => new Promise ( async (resolve) => {
-					setTimeout(() => resolve("done"), 40 * 1000);
+					setTimeout(() => resolve("done"), config.timers.queryLoop * 1000);
 
 					for await  (let row of rows){
 
-						const ips    = row.ips.split('#')
-						const ports  = row.ports.split('#')
+						const ips    = row.ips.split('#');
+						const ports  = row.ports.split('#');
 
 						for (let i in ips){
 
 							let check = false;
 
 							for await (let server of servers){
-								//console.log(row2.ip+" == "+ips[i]+" && "+row2.port+" == "+ports[i])
 								if(server.ip == ips[i] && server.port == ports[i]){
-									//console.log("found")
-									check = true
+									check = true;
 								}
 							}
 
@@ -72,7 +70,7 @@ client.once('ready' , async () => {
 					for await (let server of servers){
 						
 						getPlayers(server).then(() => {
-							i++
+							i++;
 							if(i == servers.length){ resolve("done");}
 						})
 					}
@@ -107,7 +105,7 @@ client.once('ready' , async () => {
 				})
 			}
 		})	
-	}, 60 * 1000)
+	}, config.timers.globalTimer * 1000)
 })
 
 

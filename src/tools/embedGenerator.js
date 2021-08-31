@@ -43,9 +43,9 @@ const createFields = servers => {
 }
 
 const getPlayers = server => new Promise( async (resolve) => {
-	setTimeout(() => { resolve("done"); }, 500);
+	setTimeout(() => { resolve("done"); }, config.timers.queryPlayers * 1000 + 50);
 
-	query.players(server.ip,server.port,350).then( (players) =>{
+	query.players(server.ip,server.port,config.timers.queryPlayers * 1000).then( (players) =>{
 		let count=0;
 
 		if(players.length==undefined){
@@ -76,9 +76,9 @@ const getPlayers = server => new Promise( async (resolve) => {
 }) 
 
 const generateNames = (container,servers,ips,ports,db) => new Promise( async (resolve) => { 
-	setTimeout(() => resolve("done"), 500);
+	setTimeout(() => resolve("done"), config.timers.queryName * 1000 + 100);
 
-	const selectPlayers = (servers,ip,port,i) => {
+	const selectPlayers = (servers,ip,port) => {
 		for (let server of servers){
 			if(server != undefined && server.ip == ip && server.port == port){
 				return server.players;
@@ -93,8 +93,6 @@ const generateNames = (container,servers,ips,ports,db) => new Promise( async (re
 		db.get(`SELECT * FROM Servers WHERE ip=? AND port=?`,ip, port, async (err,row)=>{
 
 			if(row!=undefined){
-				//console.log("infoDB")
-
 				container.push({
 					map     : row.map,
 					name    : row.name,
@@ -102,18 +100,13 @@ const generateNames = (container,servers,ips,ports,db) => new Promise( async (re
 					players : selectPlayers(servers,ip,port)
 				});
 
-				i++
-				if(i == ports.length){
-					resolve("done")
-				}
-
+				i++;
+				if(i == ports.length){ resolve("done") }
 			}
 			else{
-				query.info(ip,port,100).then(async info=>{
+				query.info(ip,port,config.timers.queryName * 1000).then(async info=>{
 					
 					if(info.map==null && info.game==null){
-						//console.log("infoNULL")
-
 						container.push({
 							map     : "Map unknow",
 							name    : ip+":"+port+" - "+info,
@@ -121,14 +114,10 @@ const generateNames = (container,servers,ips,ports,db) => new Promise( async (re
 							players : selectPlayers(servers,ip,port)
 						});	
 
-						i++
-						if(i == ports.length){
-							resolve("done")
-						}
+						i++;
+						if(i == ports.length){ resolve("done") }
 					}
 					else{
-						//console.log("infoQUERY")
-
 						const _ = removeVersion(info.name)
 
 						container.push({
@@ -139,12 +128,10 @@ const generateNames = (container,servers,ips,ports,db) => new Promise( async (re
 						});
 
 						await db.run(`INSERT OR REPLACE INTO Servers (ip,port,name,map,game) VALUES (?,?,?,?,?)`,
-							ip, port, _, info.map, info.game)
+							ip, port, _, info.map, info.game);
 
-						i++
-						if(i == ports.length){
-							resolve("done")
-						}
+						i++;
+						if(i == ports.length){ resolve("done") }
 					}
 				}).catch(err=>{return})
 			}
@@ -159,42 +146,38 @@ const generateEmbed = (begin,client,db,servers,ips,ports) => new Promise ( (reso
 	const createServer = servers => new Promise ((resolve) => {
 		if(servers.length == 0){
 			for (let i in ips){
-
 				let server = {
 					ip      : ips[i],
 					port    : ports[i],
 					players : ""
-				}
+				};
+
 				getPlayers(server).then(() => {
 					servers.push(server);
 					if(servers.length == ips.length){
-						resolve("done")
+						resolve("done");
 					}
-				})
+				});
 			}
-		} else {
-			resolve("done")
-		}
+		} else { resolve("done"); }
 	}) 
 	
 	createServer(servers).then(() => {
 		for (let server of servers){
-
 			if(server.players == ''){
 				server.players = " Not Responding or Tismed Out\n"; 
 			}
-			//console.log(server.ip+":"+server.port+"\n"+server.players)
 		}
 
 		generateNames(container,servers,ips,ports,db).then(() => {
-			console.log("editMessage : " + Math.abs(Date.now() - begin))
+			console.log("editMessage : " + Math.abs(Date.now() - begin));
 			resolve({embed:{
 						color: 15105570,
 						title: "Ark Player List",
 						footer: {text: "Made by Leo#4265 with source-server-query"},
 						timestamp: Date.now(),
 						fields: createFields(container)
-					}})
+					}});
 		})
 	})
 })

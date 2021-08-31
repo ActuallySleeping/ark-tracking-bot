@@ -7,12 +7,12 @@ const { generateEmbed } = require(`${__dirname}/../tools/embedGenerator.js`)
 module.exports = {
 	name: 'start',
 	args: true,
-	cooldown: 1,
+	cooldown: config.cooldown.start,
 	permissions: ['MANAGE_MESSAGES','MANAGE_SERVER'],
 	guildOnly: true,
 	aliases: ['sa'],
 	async execute(message, args, client, db) {
-		message.delete({timeout:10}).catch(err=>{return})
+		message.delete({timeout:10}).catch(err=>{return;})
 
 
 		db.get(`SELECT * FROM Guilds WHERE id=?`, 
@@ -20,16 +20,16 @@ module.exports = {
 			db.get(`SELECT * FROM Users WHERE id=?`, 
 			  message.author.id , async (err,rowUser) => {
 
-				if(args.length>=20 
-                    || (rowUser  && rowUser .servers+args.length >= 40 )
-                    || (rowGuild && rowGuild.servers+args.length >= 40)){
+				if(args.length>=config.limits.commandLimit 
+                    || (rowUser  && rowUser .servers+args.length >= config.limits.userLimit )
+                    || (rowGuild && rowGuild.servers+args.length >= config.limits.guildLimit)){
 
-					message.channel.send("You will follow too many servers (limit is 40 by user and discord server)!").then(msg=>{msg.delete({timeout:3500})}).catch(err=>{return})
-					return
+					message.channel.send("You will follow too many servers (limit is " + config.userLimit + " by user and " + config.guildLimit + "by discord server)!").then(msg=>{msg.delete({timeout:3500})}).catch(err=>{return});
+					return;
 				}
 				if(args.every(checkIp)){
-					message.channel.send("Please insert ip with the correct format (x.x.x.x:port)!").then(msg=>{msg.delete({timeout:3500})}).catch(err=>{return})
-					return
+					message.channel.send("Please insert ip with the correct format (x.x.x.x:port)!").then(msg=>{msg.delete({timeout:3500})}).catch(err=>{return});
+					return;
 				}
 
 				let ips = [];
@@ -51,12 +51,11 @@ module.exports = {
 				count = (rowGuild ? rowGuild.servers : 0) + args.length;
 				db.run("INSERT OR REPLACE INTO Guilds(id, servers) VALUES(?, ?)", message.guild.id, count);
 
-												          //begin,client,db,servers,ips,ports
-				message.channel.send(" ‎",await generateEmbed(null,client,db,[],ips.split('#'),ports.split('#').map(Number)))
-				  .catch(err=>{return})
+				message.channel.send(" ‎",await generateEmbed(Date.now(),client,db,[],ips.split('#'),ports.split('#').map(Number)))
+				  .catch(err=>{return;})
 				  .then(msg => {
 					db.run(`INSERT INTO Tracked (guildid,channelid,messageid,ips,ports,authorid) VALUES(?,?,?,?,?,?)`,
-					  msg.guild.id,msg.channel.id,msg.id,ips,ports,message.author.id,err=>{return})
+					  msg.guild.id,msg.channel.id,msg.id,ips,ports,message.author.id,err=>{return;});
 				})
 			})
 		})

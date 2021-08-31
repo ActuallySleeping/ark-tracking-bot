@@ -3,11 +3,11 @@ const config = require(`${__dirname}/../config.json`)
 
 module.exports = {
 	name: 'stop',
-	cooldown: 1,
+	cooldown: config.cooldown.stop,
 	permissions: ['MANAGE_MESSAGES','MANAGE_SERVER'],
 	aliases: ['so'],
 	async execute(message, args, client, db) {
-		message.delete({timeout:10}).catch(err=>{return})
+		message.delete({timeout:10}).catch(err=>{return;})
 
         db.all(`SELECT * FROM Tracked WHERE guildid=? AND channelid=?`,
           [message.guild.id,message.channel.id],async (err,rows)=>{
@@ -30,10 +30,10 @@ module.exports = {
 
 		  			message.channel.messages
 		  			 .fetch(row.messageid)
-					  .catch(err=>{return})
+					  .catch(err=>{return;})
 					  .then(msg => {
 					  	msg.delete({timeout:10})
-					  	 .catch(err=>{return});
+					  	 .catch(err=>{return;});
 					  });
 
 		          	db.run(`DELETE FROM Tracked WHERE guildid=? AND channelid=? AND messageid=?`,

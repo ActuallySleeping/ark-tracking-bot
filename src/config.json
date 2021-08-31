@@ -1,4 +1,24 @@
 {
 	"maintenance":["🔧 Fixing bugs", { "type": "PLAYING" }],
-	"normal":["🎥 ARK servers", { "type": "WATCHING" }]
+	"normal":["🎥 ARK servers", { "type": "WATCHING" }],
+
+	"timers" : {
+		"globalTimer" : 15,
+		"queryLoop" : 10,
+		"queryPlayers" : 0.5,
+		"queryName" : 0.1
+	},
+
+	"limits" : {
+		"commandLimit" : 20,
+		"userLimit" : 40,
+		"guildLimit" : 40
+	},
+
+	"cooldown" : {
+		"start" : 30,
+		"stop" : 30,
+		"help" : 60,
+		"clear" : 120
+	}
 }
