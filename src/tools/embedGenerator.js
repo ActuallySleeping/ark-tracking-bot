@@ -156,8 +156,18 @@ const createEmbed = (client,ips,ports,db) => new Promise ( (resolve) => {
 	let container = [];
 	let servers = [];
 
+
+
+	
+})
+
+const generateEmbed = (begin,client,db,servers,ips,ports) => new Promise ( (resolve) => {
+
+	let container = [];
+
 	const createServer = servers => new Promise ((resolve) => {
-		for (let i in ips){
+		if(servers.length == 0){
+			for (let i in ips){
 
 				let server = {
 					ip      : ips[i],
@@ -166,21 +176,27 @@ const createEmbed = (client,ips,ports,db) => new Promise ( (resolve) => {
 				}
 				getPlayers(server).then(() => {
 					servers.push(server);
-					resolve("done")
+					if(servers.length == ips.length){
+						resolve("done")
+					}
 				})
 			}
+		} else {
+			resolve("done")
+		}
 	}) 
-
+	
 	createServer(servers).then(() => {
 		for (let server of servers){
 
 			if(server.players == ''){
-				server.players = " Not Responding or Timed Out\n"; 
+				server.players = " Not Responding or Tismed Out\n"; 
 			}
 			//console.log(server.ip+":"+server.port+"\n"+server.players)
 		}
 
 		generateNames(container,servers,ips,ports,db).then(() => {
+			console.log("editMessage : " + Math.abs(Date.now() - begin))
 			resolve({embed:{
 						color: 15105570,
 						title: "Ark Player List",
@@ -192,32 +208,16 @@ const createEmbed = (client,ips,ports,db) => new Promise ( (resolve) => {
 	})
 })
 
-const generateEmbed = async (begin,client,msg,db,servers,ips,ports) => {
-
-	let container = [];
-	generateNames(container,servers,ips,ports,db).then(() => {
-		try {
-			msg.edit(" ‎",{embed:{
-				color: 15105570,
-				title: "Ark Player List",
-				footer: {text: "Made by Leo#4265 with source-server-query"},
-				timestamp: Date.now(),
-				fields: createFields(container)
-			}}).catch(err=>{return})
-			console.log("editMessage : " + Math.abs(Date.now() - begin))
-		} catch {
-			return;
-		}
-	})
-
-}
-
 async function generateMessage(begin,client,db,channel,messageid,ips,ports,servers){
 	channel.messages.fetch(messageid)
 	  .catch(err =>{return})
 	  .then(async (msg) =>{
 		if(msg!=undefined && msg.deleted!=true){
-			await generateEmbed(begin,client,msg,db,servers,ips,ports)
+			try {
+				msg.edit(" ‎", await generateEmbed(begin,client,db,servers,ips,ports)).catch(err=>{return})
+			} catch {
+				return;
+			}
 	  	}
 	  	else{
 			channel.send("‎The message logged as been deleted, a new one will be generated")
