@@ -45,10 +45,43 @@ const createFields = container => {
 	return field
 }
 
+const getPlayers = server => new Promise( async (resolve) => {
+	setTimeout(() => { resolve("done"); }, 500);
+
+	query.players(server.ip,server.port,350).then( (players) =>{
+		let count=0;
+
+		if(players.length==undefined){
+			server.players = " Not Responding or Timed Out\n"; 
+			resolve("done");
+		}
+
+		for (let player of players){
+
+			if( player.name == '' ) {
+				count++;
+			}
+
+			else {
+				server.players += " [" + timesetter(player.duration) + "] " +
+								  player.name + "\n";
+			}
+		}
+
+	    if(players.length == 0 || count == players.length) { 
+	    	server.players = " No Players\n"; 
+	    }
+
+	    resolve("done");
+
+	}).catch(err=>{return;})
+
+}) 
+
 const generateNames = (container,servers,ips,ports,db) => new Promise( async (resolve) => { 
 	setTimeout(() => resolve("done"), 500);
 
-	const getPlayers = (servers,ip,port,i) => {
+	const selectPlayers = (servers,ip,port,i) => {
 		for (let server of servers){
 			if(server != undefined && server.ip == ip && server.port == port){
 				return server.players;
@@ -67,7 +100,7 @@ const generateNames = (container,servers,ips,ports,db) => new Promise( async (re
 					map     : row.map,
 					name    : row.name,
 					game    : row.game,
-					players : getPlayers(servers,ip,port)
+					players : selectPlayers(servers,ip,port)
 				});
 
 				if(port == ports[ports.length-1]){
@@ -85,10 +118,10 @@ const generateNames = (container,servers,ips,ports,db) => new Promise( async (re
 							map     : "Map unknow",
 							name    : ip+":"+port+" - "+info,
 							game    : "No games",
-							players : getPlayers(servers,ip,port)
+							players : selectPlayers(servers,ip,port)
 						});	
 
-						if(i+1 == ports.length){
+						if(port == ports[ports.length-1]){
 							resolve("done")
 						}
 					}
@@ -101,13 +134,13 @@ const generateNames = (container,servers,ips,ports,db) => new Promise( async (re
 							map     : info.map,
 							name    : _,
 							game    : info.game,
-							players : getPlayers(servers,ip,port)
+							players : selectPlayers(servers,ip,port)
 						});
 
 						await db.run(`INSERT OR REPLACE INTO Servers (ip,port,name,map,game) VALUES (?,?,?,?,?)`,
 							ip, port, _, info.map, info.game)
 
-						if(i+1 == ports.length){
+						if(port == ports[ports.length-1]){
 							resolve("done")
 						}
 					}
@@ -132,42 +165,6 @@ const createEmbed = async (client,ips,ports,db) => {
 		}
 		servers.push(server)
 	}
-
-	const getPlayers = (server) => new Promise ((resolve) => {
-		setTimeout(() => resolve("done"), 550);
-		query.players(server.ip,server.port,500).then( players =>{
-			let count=0;
-
-			if(players.length==undefined){
-				server.players = " Not Responding or Timed Out\n"; 
-				resolve("done");
-			}
-
-			for (let player of players){
-
-				if( player.name == '' ) {
-					count++;
-				}
-
-				else {
-					server.players += " [" + 
-					timesetter(player.duration) + 
-					"] " +
-					player.name + 
-					"\n";
-				}
-			}
-
-		    if(players.length == 0 || count == players.length) { 
-		    	server.players = " No Players\n"; 
-		    }
-			
-			i++
-			if(i == servers.length){
-				resolve("done");
-			}
-		}).catch(err=>{return;})
-	}) 
 
 	getPlayers(servers).then(() => {
 		console.log(servers)
@@ -222,4 +219,4 @@ async function generateMessage(begin,client,db,channel,messageid,ips,ports,serve
 	})
 }
 
-module.exports = { generateMessage, generateEmbed, timesetter, createEmbed }
+module.exports = { generateMessage, generateEmbed, timesetter, createEmbed, getPlayers }

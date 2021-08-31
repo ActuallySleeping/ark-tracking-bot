@@ -3,7 +3,7 @@ const Discord = require('discord.js')
 const sqlite3 = require('sqlite3').verbose();
 const query = require("source-server-query");
 
-const { generateMessage,timesetter }  = require(`${__dirname}/src/tools/embedGenerator.js`)
+const { generateMessage, timesetter, getPlayers }  = require(`${__dirname}/src/tools/embedGenerator.js`)
 const config = require(`${__dirname}/src/config.json`)
 const baselocation = `${__dirname}/src/base.db`
 
@@ -36,7 +36,7 @@ client.once('ready' , async () => {
 				let servers = [];
 
 				const updateInfos = rows => new Promise ( async (resolve) => {
-					setTimeout(() => resolve("done"), 40 * 1000);
+					setTimeout(() => resolve("done"), 10 * 1000);
 
 					for await  (let row of rows){
 
@@ -69,54 +69,24 @@ client.once('ready' , async () => {
 					let i = 0;
 
 					for await (let server of servers){
-
-						const getPlayers = server => new Promise( async (resolve) => {
-							setTimeout(() => resolve("done"), 500);
-							query.players(server.ip,server.port,400).then( (players) =>{
-								let count=0;
-
-								if(players.length==undefined){
-									server.players = " Not Responding or Timed Out\n"; 
-									return;
-								}
-
-								for (let player of players){
-
-									if( player.name == '' ) {
-										count++;
-									}
-					
-									else {
-										server.players += " [" + 
-										timesetter(player.duration) + 
-										"] " +
-										player.name + 
-										"\n";
-									}
-								}
-
-
-
-							    if(players.length == 0 || count == players.length) { 
-							    	server.players = " No Players\n"; 
-							    }
-
-								i++
-							}).catch(err=>{return;})
-
-						}) 
+						
 						getPlayers(server).then(() => {
-							if(i == servers.length){ resolve("done"); }
+							i++
+							if(i == servers.length){ resolve("done");}
 						})
 					}
 				})
 				
 				updateInfos(rows).then(() => {
 
-					console.log("getPlayers : " + Math.abs(Date.now() - begin))
-					/*or (let server of servers){
-						console.log(server.ip+":"+server.port+"\n"+server.players)
-					}*/
+					console.log("\ngetPlayers : " + Math.abs(Date.now() - begin))
+					for (let server of servers){
+
+						if(server.players == ''){
+							server.players = " Not Responding or Timed Out\n"; 
+						}
+						//console.log(server.ip+":"+server.port+"\n"+server.players)
+					}
 
 					for (let row of rows){
 						const channel = client.guilds.cache.get(row.guildid)
@@ -136,7 +106,7 @@ client.once('ready' , async () => {
 				})
 			}
 		})	
-	}, 60 * 1000)
+	}, 15 * 1000)
 })
 
 
