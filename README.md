@@ -1,4 +1,4 @@
-![ARK: Survival Evolved, Genesis part 2 Camera System Cropt](https://imgur.com/a/HEvQw3z)
+![ARK: Survival Evolved, Genesis part 2 Camera System Cropt](https://i.imgur.com/IfNjeu7.jpeg)
 # Discord bot for player and server tracking on ARK  
 ## Introduction  
 This is my first projet regarding JavaScript as well as the use of GitHub  a
@@ -33,8 +33,8 @@ Clear an amount of message, the default amount is 100
 - [x] Stop tracking a server  
 
 #### Optional
-##### Create a sql database file is there is not already one
-- [ ] make it
+##### Create a database file when missing
+- [x] make it
 
 ##### Make a source server query
 - [ ] work on it

@@ -5,12 +5,52 @@ const query = require("source-server-query");
 
 const { generateMessage, timesetter, getPlayers }  = require(`${__dirname}/src/tools/embedGenerator.js`)
 const config = require(`${__dirname}/src/config.json`)
+
+let db;
 const baselocation = `${__dirname}/src/base.db`
+if(fs.existsSync(baselocation)){
+	db = new sqlite3.Database(baselocation)
+} else {
+	db = new sqlite3.Database(baselocation);
+	db.run('CREATE TABLE Guilds ('+
+		'id			TEXT,'+
+		'servers 	INTEGER,'+
+		'PRIMARY KEY(id)'+
+		')');
+	db.run('CREATE TABLE Players ('+
+		'ip 		INTEGER, '+
+		'port 		INTEGER, '+
+		'players 	TEXT, '+
+		'PRIMARY KEY(ip,port)'+
+		')');
+	db.run('CREATE TABLE Servers ('+
+		'ip 		TEXT,'+
+		'port		INTEGER,'+
+		'name		TEXT,'+
+		'map		TEXT,'+
+		'game		TEXT,'+
+		'PRIMARY KEY(port,ip)'+
+		')');
+	db.run('CREATE TABLE Tracked ('+
+		'guildid	TEXT,'+
+		'channelid	TEXT,'+
+		'messageid	TEXT,'+
+		'ips		TEXT,'+
+		'ports		TEXT,'+
+		'authorid	TEXT,'+
+		'PRIMARY KEY(guildid,ips,ports)'+
+		')');
+	db.run('CREATE TABLE Users ('+
+		'id			TEXT,'+
+		'servers	INTEGER,'+
+		'PRIMARY KEY(id)'+
+		')');
+}
 
 const client = new Discord.Client();
 client.commands = new Discord.Collection();
 client.cooldowns = new Discord.Collection();
-let db = new sqlite3.Database(baselocation)
+
 
 const commandFiles = fs.readdirSync(`${__dirname}/src/commands`).filter(file => file.endsWith('.js'));
 for (const file of commandFiles) {
