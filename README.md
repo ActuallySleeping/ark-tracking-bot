@@ -33,11 +33,8 @@ Clear an amount of message, the default amount is 100
 - [x] Stop tracking a server  
 
 #### Optional
-##### Create a database file when missing
-- [x] make it
-
-##### Make a source server query
-- [ ] work on it
+- [x] Create a database file when missing
+- [ ] Make a source server query
 
 ## How was the project made  
 ### Used Node_modules  
