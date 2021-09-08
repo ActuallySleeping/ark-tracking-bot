@@ -7,9 +7,9 @@ const { generateMessage, timesetter, getPlayers }  = require(`${__dirname}/src/t
 const config = require(`${__dirname}/src/config.json`)
 
 let db;
-const baselocation = `${__dirname}/src/base.db`
+const baselocation = `${__dirname}/src/base.db`;
 if(fs.existsSync(baselocation)){
-	db = new sqlite3.Database(baselocation)
+	db = new sqlite3.Database(baselocation);
 } else {
 	db = new sqlite3.Database(baselocation);
 	db.run('CREATE TABLE Guilds ('+
@@ -69,7 +69,8 @@ client.once('ready' , async () => {
 	  .catch(err=>{console.log(err)});
 	
 	let timer = setInterval(function() {
-	let begin = Date.now();
+		console.log("\n\n\n");
+		let begin = Date.now();
 
 		db.all(`SELECT * FROM Tracked`,[], (err,rows) =>{
 			if(rows!=undefined && rows.length>0){

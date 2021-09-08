@@ -4,7 +4,6 @@ const query = require("source-server-query");
 const { removeVersion } = require(`${__dirname}/toolbox.js`)
 const config = require(`${__dirname}/../config.json`)
 
-
 /*Change the display of the time 
 	@param time Int, contain the time in seconds, to transform 
 	@return String, time transformed in the best possible way
@@ -43,14 +42,52 @@ const createFields = servers => {
 }
 
 const getPlayers = server => new Promise( async (resolve) => {
-	setTimeout(() => { resolve("done"); }, config.timers.queryPlayers * 1000 + 50);
+	setTimeout(() => { resolve("done"); }, config.timers.queryPlayers * 1000 + 100);
 
+	const writeServer = (pings,server,begin) => {
+		fs.exists(pings, e => {
+			let now = Date.now();
+			if(e){
+				fs.readFile(pings, (e, data) => {
+					let object;
+
+					try {
+						object = JSON.parse(data);
+					} catch (err) {
+						console.log(server.ip+":"+server.port+" > error");
+						return;
+					}
+
+					if(object[server.ip+":"+server.port] != undefined){
+						object[server.ip+":"+server.port][now] = (now-begin);
+					} else {
+						object[ server.ip+":"+server.port ] = { [ now ] : (now-begin) };
+					}
+
+					console.log(server.ip+":"+server.port+" > "+(now-begin));
+					fs.writeFile(pings, JSON.stringify(object, null, '\t'), e => { if(e!=null)console.log(err); });
+				})
+
+			} else {
+				let object = { [server.ip+":"+server.port] : { [now] : (now-begin) } };
+				fs.writeFile(pings, JSON.stringify(object, null, '\t'), e => { if(e!=null)console.log(err); });
+			}
+		})
+	}
+
+	const fs = require('fs')
+	const pings = (`${__dirname}/../pings.json`)
+
+
+	let begin = Date.now();
 	query.players(server.ip,server.port,config.timers.queryPlayers * 1000).then( (players) =>{
 		let count=0;
 
 		if(players.length==undefined){
 			server.players = " Not Responding or Timed Out\n"; 
-			resolve("done");
+	    	writeServer(pings,server,begin).then(() => {
+	    		resolve("not responding");
+	    	})
 		}
 
 		for (let player of players){
@@ -68,8 +105,9 @@ const getPlayers = server => new Promise( async (resolve) => {
 	    if(players.length == 0 || count == players.length) { 
 	    	server.players = " No Players\n"; 
 	    }
-
-	    resolve("done");
+    	writeServer(pings,server,begin).then(() => {
+    		resolve("done");
+    	})
 
 	}).catch(err=>{return;})
 
@@ -183,6 +221,7 @@ const generateEmbed = (begin,client,db,servers,ips,ports) => new Promise ( (reso
 })
 
 async function generateMessage(begin,client,db,channel,messageid,ips,ports,servers){
+	if(channel == undefined) { return; }
 	channel.messages.fetch(messageid)
 	  .catch(err =>{return})
 	  .then(async (msg) =>{
