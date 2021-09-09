@@ -1,5 +1,5 @@
 node_modules/
-a
+
 src/base.db
 src/token.json
 src/pings.json
