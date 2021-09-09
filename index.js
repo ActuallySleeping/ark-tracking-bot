@@ -66,12 +66,13 @@ client.once('ready' , async () => {
 
 	let activity = config.maintenance
 
-	let activityreload = setInterval( () => {
-
-	}, 1 * 60 * 60 * 1000)
-
 	client.user.setActivity(activity[0],activity[1])
 	  .catch(err=>{console.log(err)});
+
+	let activityreload = setInterval( () => {
+		client.user.setActivity(activity[0],activity[1])
+		  .catch(err=>{console.log(err)});
+	}, 1 * 60 * 60 * 1000)
 	
 	let timer = setInterval(function() {
 		timeoutServers().then( () => {
