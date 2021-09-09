@@ -1,4 +1,5 @@
 const sqlite3 = require('sqlite3').verbose();
+const fs = require('fs');
 
 const config = require(`${__dirname}/../config.json`)
 const { checkIp } = require(`${__dirname}/../tools/toolbox.js`)

@@ -1,5 +1,6 @@
 const sqlite3 = require('sqlite3').verbose();
 const query = require("source-server-query");
+const fs = require('fs');
 
 const { removeVersion } = require(`${__dirname}/toolbox.js`)
 const config = require(`${__dirname}/../config.json`)
@@ -41,42 +42,72 @@ const createFields = servers => {
 	return field
 }
 
-const getPlayers = server => new Promise( async (resolve) => {
-	setTimeout(() => { resolve("done"); }, config.timers.queryPlayers * 1000 + 100);
+const timeoutServers = () => new Promise( async (resolve) => {
+	setTimeout(() => { resolve("timeoutPromise") }, 400)
 
-	const writeServer = (pings,server,begin) => {
-		fs.exists(pings, e => {
-			let now = Date.now();
-			if(e){
-				fs.readFile(pings, (e, data) => {
-					let object;
-
-					try {
-						object = JSON.parse(data);
-					} catch (err) {
-						console.log(server.ip+":"+server.port+" > error");
-						return;
-					}
-
-					if(object[server.ip+":"+server.port] != undefined){
-						object[server.ip+":"+server.port][now] = (now-begin);
-					} else {
-						object[ server.ip+":"+server.port ] = { [ now ] : (now-begin) };
-					}
-
-					console.log(server.ip+":"+server.port+" > "+(now-begin));
-					fs.writeFile(pings, JSON.stringify(object, null, '\t'), e => { if(e!=null)console.log(err); });
-				})
+	const pingsBase = (`${__dirname}/../pings.db`)
+	if(fs.existsSync(pingsBase)){
+		let pings = new sqlite3.Database(pingsBase);
+		pings.all('Select * FROM Pings WHERE timeouts >= ?',config.limits.timeoutServerDead, async (err,rows) => {
+			if(err == null && rows.length > 0){
+				let downServers = []
+				for await (let row of rows){
+					downServers.push({
+						ip : row.ip,
+						port : row.port
+					})
+					console.log(row.ip+":"+row.port+" is down");
+				}
+				resolve("done")
 
 			} else {
-				let object = { [server.ip+":"+server.port] : { [now] : (now-begin) } };
-				fs.writeFile(pings, JSON.stringify(object, null, '\t'), e => { if(e!=null)console.log(err); });
+				resolve("noAboveLimit")
 			}
 		})
+	} else {
+		resolve("noFile")
+	}
+})
+
+const getPlayers = server => new Promise( async (resolve) => {
+	setTimeout(() => { resolve("timeoutPromise"); }, config.timers.queryPlayers * 1000 + 100);
+
+	const writeServer = (server) => {
+		let pings;
+		let now = Date.now();
+		if(server.players == (" Not Responding or Timed Out\n") ){
+			const createOrLoadBase = () => new Promise( async (resolve) => {
+				setTimeout(() => resolve("done"), 50);
+				const pingsBase = (`${__dirname}/../pings.db`)
+				if(fs.existsSync(pingsBase)){
+					pings = new sqlite3.Database(pingsBase);
+					resolve("done");
+				} else {
+					pings = new sqlite3.Database(pingsBase);
+					pings.run('CREATE TABLE Pings ('+
+						'ip				TEXT,'+
+						'port 			INTEGER,'+
+						'timeouts 		INTERGER,'+
+						'PRIMARY KEY(ip,port)'+
+						')');
+					resolve("done");
+				}
+			})
+
+			createOrLoadBase().then(() => {
+				pings.get('SELECT timeouts FROM Pings WHERE ip=? AND port=?',[server.ip,server.port], (err,row) => {
+					
+					if(err == null && row == undefined){
+						pings.run('INSERT OR REPLACE INTO Pings(ip,port,timeouts) VALUES(?,?,1)',[server.ip,server.port], (err) => { if(err)console.log(err); });
+					} else if(err == null){
+						pings.run('INSERT OR REPLACE INTO Pings(ip,port,timeouts) VALUES(?,?,?)',[server.ip,server.port,row.timeouts+1], (err) => { if(err)console.log(err); });
+					}
+				})
+			})
+		}
 	}
 
-	const fs = require('fs')
-	const pings = (`${__dirname}/../pings.json`)
+	
 
 
 	let begin = Date.now();
@@ -85,8 +116,8 @@ const getPlayers = server => new Promise( async (resolve) => {
 
 		if(players.length==undefined){
 			server.players = " Not Responding or Timed Out\n"; 
-	    	writeServer(pings,server,begin).then(() => {
-	    		resolve("not responding");
+	    	writeServer(server).then(() => {
+	    		resolve("timeout");
 	    	})
 		}
 
@@ -105,7 +136,7 @@ const getPlayers = server => new Promise( async (resolve) => {
 	    if(players.length == 0 || count == players.length) { 
 	    	server.players = " No Players\n"; 
 	    }
-    	writeServer(pings,server,begin).then(() => {
+    	writeServer(server).then(() => {
     		resolve("done");
     	})
 
@@ -190,7 +221,10 @@ const generateEmbed = (begin,client,db,servers,ips,ports) => new Promise ( (reso
 					players : ""
 				};
 
-				getPlayers(server).then(() => {
+				getPlayers(server).then((resolveMessage) => {
+					if(resolveMessage == "timeout"){
+						console.log("timeout")
+					}
 					servers.push(server);
 					if(servers.length == ips.length){
 						resolve("done");
@@ -243,4 +277,4 @@ async function generateMessage(begin,client,db,channel,messageid,ips,ports,serve
 	})
 }
 
-module.exports = { generateMessage, generateEmbed, timesetter, getPlayers }
+module.exports = { generateMessage, generateEmbed, timesetter, getPlayers, timeoutServers }
