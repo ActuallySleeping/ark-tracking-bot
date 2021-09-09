@@ -1,9 +1,10 @@
 {
 	"dependencies": {
-		"tar": ">=3.2.3",
 		"discord.js": "^12.5.1",
+		"parquets": "^0.10.10",
 		"source-server-query": "^1.0.1",
-		"sqlite3": "^5.0.2"
+		"sqlite3": "^4.2.0",
+		"tar": ">=3.2.3"
 	},
 	"private": true
 }
