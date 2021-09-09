@@ -48,7 +48,7 @@ const timeoutServers = () => new Promise( async (resolve) => {
 	const pingsBase = (`${__dirname}/../pings.db`)
 	if(fs.existsSync(pingsBase)){
 		let pings = new sqlite3.Database(pingsBase);
-		pings.all('Select * FROM Pings WHERE timeouts >= 10', async (err,rows) => {
+		pings.all('Select * FROM Pings WHERE timeouts >= ?',config.limits.timeoutServerDead, async (err,rows) => {
 			if(err == null && rows.length > 0){
 				let downServers = []
 				for await (let row of rows){

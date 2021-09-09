@@ -12,7 +12,8 @@
 	"limits" : {
 		"commandLimit" : 20,
 		"userLimit" : 40,
-		"guildLimit" : 40
+		"guildLimit" : 40,
+		"timeoutServerDead" : 2160
 	},
 
 	"cooldown" : {
